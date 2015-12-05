@@ -70,8 +70,6 @@ final class API {
         URLRequest.HTTPMethod = method
 
         let request = encoding.encode(URLRequest, parameters: nil).0
-
-        //print("Starting \(method) \(URL) (\(parameters ?? [:]))")
         
         Alamofire.request(request).responseJSON { (response) -> Void in
             let result = response.result
@@ -79,6 +77,7 @@ final class API {
             case .Success(let JSON):
                 completion(JSON)
             case .Failure(let error):
+                print("Request failed with error: \(error)")
                 completion(nil)
             }
             
