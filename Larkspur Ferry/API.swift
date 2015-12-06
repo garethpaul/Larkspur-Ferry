@@ -79,7 +79,6 @@ final class API {
             case .Success(let JSON):
                 completion(JSON)
             case .Failure(let error):
-                print("Request failed with error: \(error)")
                 completion(nil)
             }
             
