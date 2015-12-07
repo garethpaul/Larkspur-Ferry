@@ -74,9 +74,6 @@ final class API {
         //print("Starting \(method) \(URL) (\(parameters ?? [:]))")
         
         Alamofire.request(request).responseJSON { (response) -> Void in
-            if let JSON = response.result.value {
-                //print(JSON)
-            }
             let result = response.result
             switch result {
             case .Success(let JSON):
