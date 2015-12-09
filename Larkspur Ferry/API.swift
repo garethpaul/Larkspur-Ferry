@@ -61,6 +61,7 @@ final class API {
         request(endpoint, method: "POST", encoding: .JSON, parameters: parameters, completion: completion)
     }
     
+    // MARK: Request helper for Alamofire
     // Perform a request on an API endpoint using Alamofire.
     private func request(endpoint: String, method: String, encoding: Alamofire.ParameterEncoding, parameters: [String: AnyObject]?, completion: AnyObject? -> Void) {
         let parameterString = parameters!.stringFromHttpParameters()
