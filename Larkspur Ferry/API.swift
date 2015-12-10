@@ -49,11 +49,13 @@ final class API {
         }
     }
 
+    // MARK: Helper for Requests
     // Convenience method to perform a GET request on an API endpoint.
     private func get(endpoint: String, parameters: [String: AnyObject]?, completion: AnyObject? -> Void) {
         request(endpoint, method: "GET", encoding: .JSON, parameters: parameters, completion: completion)
     }
     
+    // MARK: Helper for Requests
     // Convenience method to perform a POST request on an API endpoint.
     private func post(endpoint: String, parameters: [String: AnyObject]?, completion: AnyObject? -> Void) {
         request(endpoint, method: "POST", encoding: .JSON, parameters: parameters, completion: completion)
