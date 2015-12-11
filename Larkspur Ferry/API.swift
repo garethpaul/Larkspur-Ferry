@@ -17,6 +17,7 @@ final class API {
     static let sharedInstance = API()
     private let apiBaseURL = "https://requestlabs.appspot.com/"
     
+    // MARK: Helper for Ferry
     // Get the location of the ferry
     func getLocation(completion: CLLocation -> Void) {
         get("ferry/location", parameters: ["t": "1"]) { JSON in
@@ -29,6 +30,7 @@ final class API {
         }
     }
     
+    // MARK: Helper for Ferry
     func getTimes(from: String, completion: [Ferry] -> Void) {
         // Get the ferry from ...
         get("ferry/larkspur", parameters: ["from": from]) { JSON in
