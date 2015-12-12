@@ -1,5 +1,5 @@
 //
-//  API.swift
+//  file: API.swift
 //  Larkspur Ferry
 //
 //  Created by Gareth Jones on 12/31/14.
@@ -17,6 +17,7 @@ final class API {
     static let sharedInstance = API()
     private let apiBaseURL = "https://requestlabs.appspot.com/"
     
+    // Get the location of the ferry
     func getLocation(completion: CLLocation -> Void) {
         get("ferry/location", parameters: ["t": "1"]) { JSON in
             if let result = JSON as? JSONObject {
