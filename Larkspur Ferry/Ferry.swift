@@ -1,5 +1,5 @@
 //
-//  Ferry.swift
+//  file: Ferry.swift
 //  Larkspur Ferry
 //
 //  Created by Gareth Jones on 11/23/15.
@@ -14,7 +14,6 @@ class Ferry {
     var depart: String
     var from: String
     var to: String
-    
     
     init(arrive: String, depart: String, from: String, to: String) {
         self.arrive = arrive
