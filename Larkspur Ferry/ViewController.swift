@@ -109,8 +109,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         
     }
     
+    // Get the Boats from the API and then reload the table
     func getBoats() {
-        
         // Get the times for the ferry
         API.sharedInstance.getTimes(f) { (boats) -> Void in
             self.items = boats
