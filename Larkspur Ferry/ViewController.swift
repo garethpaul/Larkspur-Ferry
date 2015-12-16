@@ -111,9 +111,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     func getBoats() {
         
-        //
-        
-        
         // Get the times for the ferry
         API.sharedInstance.getTimes(f) { (boats) -> Void in
             self.items = boats
