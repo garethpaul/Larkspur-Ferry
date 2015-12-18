@@ -85,7 +85,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         self.performSegueWithIdentifier("viewMap", sender: self)
     }
     
-    
+    // Start finding location
     func findMyLocation() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest

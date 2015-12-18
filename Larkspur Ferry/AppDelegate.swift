@@ -17,7 +17,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
-        RidesClient.sharedInstance.configureClientID("WzfJJPRAuPgm9KNlyraTn0KY8OLY3efX")
+        // Setup Uber SDK
+        RidesClient.sharedInstance.configureClientID("")
         return true
     }
 
