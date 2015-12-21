@@ -21,7 +21,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("hi there")
         self.mapView.delegate = self
         getLocation()
         let timer = NSTimer.scheduledTimerWithTimeInterval(30, target: self, selector: Selector("getLocation"), userInfo: nil, repeats: true)
@@ -31,7 +30,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
     
     func getLocation() {
-        print("getting location")
         // remove locations if they exist
         if self.mapView.annotations.count == 1 {
             self.mapView.removeAnnotations(self.mapView.annotations)

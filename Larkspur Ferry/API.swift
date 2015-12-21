@@ -65,8 +65,7 @@ final class API {
 
         let request = encoding.encode(URLRequest, parameters: nil).0
 
-        
-        print("Starting \(method) \(URL) (\(parameters ?? [:]))")
+        //print("Starting \(method) \(URL) (\(parameters ?? [:]))")
         
         Alamofire.request(request).responseJSON { (response) -> Void in
             if let JSON = response.result.value {
