@@ -10,4 +10,5 @@ use_frameworks!
 target 'Larkspur Ferry' do
   pod 'Alamofire', '~> 3.0'
   pod 'pop', '~> 1.0'
+  pod 'UberRides'
 end

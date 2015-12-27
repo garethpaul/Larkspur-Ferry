@@ -9,19 +9,23 @@
 import UIKit
 import MapKit
 import Alamofire
+import UberRides
 
 class MapViewController: UIViewController, MKMapViewDelegate {
 
     
+    @IBOutlet weak var bottomMapOverlay: UIView!
     @IBOutlet weak var mapView: MKMapView!
     var initialLocation = CLLocation(latitude: 37.79984, longitude: -122.38921)
     let regionRadius: CLLocationDistance = 4200
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("hi there")
         self.mapView.delegate = self
         getLocation()
         let timer = NSTimer.scheduledTimerWithTimeInterval(30, target: self, selector: Selector("getLocation"), userInfo: nil, repeats: true)
+        timer.fire()
         
         // Do any additional setup after loading the view.
     }
