@@ -43,14 +43,22 @@ class Larkspur_FerryUITests: XCTestCase {
         
         // Select a cell to swipe
         XCUIApplication().tables.cells.containingType(.StaticText, identifier:"8:30 AM").staticTexts["San Francisco to Larkspur"].swipeUp()
+        
+        // Take second screen shot
         snapshot("02FerryScreen")
-        snapshot("03Ferry2Screen")
+        
+        // Take third screenshot
+        snapshot("03FerryScreen")
+        
         // need to sleep before tapping
         sleep(3)
         
+        // Tap one of the ferry times
         app.tables.cells.containingType(.StaticText, identifier:"10:10 AM").staticTexts["San Francisco to Larkspur"].tap()
         
+        // sleep to enable map to render
         sleep(8)
+        // Take screenshot of map
         snapshot("04MapScreen")
         snapshot("05MapScreen")
         
