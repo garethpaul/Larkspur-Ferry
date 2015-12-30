@@ -1,0 +1,48 @@
+before_all do
+  increment_build_number
+  
+  cocoapods
+  # xctool "test"
+end
+
+lane :test do
+  snapshot
+end
+
+lane :beta do
+  sigh
+  gym
+  pilot
+  # sh "your_script.sh"
+end
+
+desc "Take screenshots"
+lane :screenshot do
+  snapshot
+end
+
+lane :deploy do
+  snapshot
+  sigh
+  gym
+  deliver(force: true)
+  # frameit
+end
+
+lane :go do
+  snapshot
+  gym
+  deliver(force: true)
+end
+
+lane :inhouse do
+  # insert your code here
+end
+
+after_all do |lane|
+  # This block is called, only if the executed lane was successful
+end
+
+error do |lane, exception|
+  # Something bad happened
+end

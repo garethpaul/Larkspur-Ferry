@@ -85,9 +85,11 @@ strip_invalid_archs() {
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "Pods-Larkspur Ferry/Alamofire.framework"
+  install_framework "Pods-Larkspur Ferry/UberRides.framework"
   install_framework "Pods-Larkspur Ferry/pop.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "Pods-Larkspur Ferry/Alamofire.framework"
+  install_framework "Pods-Larkspur Ferry/UberRides.framework"
   install_framework "Pods-Larkspur Ferry/pop.framework"
 fi
