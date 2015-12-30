@@ -58,13 +58,10 @@ class Larkspur_FerryUITests: XCTestCase {
         
         // sleep to enable map to render
         sleep(8)
-        // Take screenshot of map
+        // Take screenshot of Map
         snapshot("04MapScreen")
+        // Take screenshot of Map
         snapshot("05MapScreen")
-        
-
-        
-        
         
     }
     
