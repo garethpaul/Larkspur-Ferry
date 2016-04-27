@@ -13,6 +13,7 @@ import Alamofire
 private typealias JSONArray = [NSDictionary]
 private typealias JSONObject = NSDictionary
 
+// MARK: API class to hold API requests
 final class API {
     static let sharedInstance = API()
     private let apiBaseURL = "https://requestlabs.appspot.com/"
