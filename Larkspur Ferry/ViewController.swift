@@ -9,7 +9,6 @@
 import UIKit
 import CoreLocation
 import Alamofire
-import UberRides
 
 class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewDelegate, UITableViewDataSource {
 
