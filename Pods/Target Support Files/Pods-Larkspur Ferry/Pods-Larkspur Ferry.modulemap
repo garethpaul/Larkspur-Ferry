@@ -1,6 +1,0 @@
-framework module Pods_Larkspur_Ferry {
-  umbrella header "Pods-Larkspur Ferry-umbrella.h"
-
-  export *
-  module * { export * }
-}
