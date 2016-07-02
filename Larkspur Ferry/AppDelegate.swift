@@ -1,5 +1,5 @@
 //
-//  AppDelegate.swift
+//  file: AppDelegate.swift
 //  Larkspur Ferry
 //
 //  Created by Gareth Jones on 11/23/15.
@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         // Setup Uber SDK
-        RidesClient.sharedInstance.configureClientID("")
+        RidesClient.sharedInstance.configureClientID("AAAAAAAAAAAAAAAAA")
         return true
     }
 
