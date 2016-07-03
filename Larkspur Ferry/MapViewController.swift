@@ -23,7 +23,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         super.viewDidLoad()
         self.mapView.delegate = self
         getLocation()
-        let timer = NSTimer.scheduledTimerWithTimeInterval(30, target: self, selector: Selector("getLocation"), userInfo: nil, repeats: true)
+        let timer = NSTimer.scheduledTimerWithTimeInterval(30, target: self, selector: #selector(MapViewController.getLocation), userInfo: nil, repeats: true)
         timer.fire()
         
         // Do any additional setup after loading the view.

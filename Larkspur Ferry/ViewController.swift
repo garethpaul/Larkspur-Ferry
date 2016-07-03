@@ -34,26 +34,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         super.viewDidLoad()
         print("get location")
         findMyLocation()
-        
-        let btn = RequestButton()
-        self.btnView.addSubview(btn)
-        centerButton(forButton: btn, inView: self.btnView)
-        
         self.tableView.registerClass(UITableViewCell.self, forCellReuseIdentifier: "cell")
     }
-    
-    func centerButton(forButton button: RequestButton, inView: UIView) {
-        button.translatesAutoresizingMaskIntoConstraints = false
-        
-        // position constraints
-        let horizontalConstraint = NSLayoutConstraint(item: button, attribute: NSLayoutAttribute.CenterX, relatedBy: NSLayoutRelation.Equal, toItem: inView, attribute: NSLayoutAttribute.CenterX, multiplier: 1, constant: 0)
-        let verticalConstraint = NSLayoutConstraint(item: button, attribute: NSLayoutAttribute.CenterY, relatedBy: NSLayoutRelation.Equal, toItem: inView, attribute: NSLayoutAttribute.CenterY, multiplier: 1, constant: -5)
-        
-        // add constraints to view
-        inView.addConstraints([horizontalConstraint, verticalConstraint])
-    }
-
-    
     
     // UITableView
     // Return rows in section
