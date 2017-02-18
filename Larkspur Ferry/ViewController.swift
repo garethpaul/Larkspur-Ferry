@@ -33,27 +33,51 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         super.viewDidLoad()
         print("get location")
         findMyLocation()
-        self.tableView.registerClass(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
+        toImage.isUserInteractionEnabled = true
+        toImage.addGestureRecognizer(tapGestureRecognizer)
+        
+        let fromtapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
+
+        fromImage.isUserInteractionEnabled = true
+        fromImage.addGestureRecognizer(fromtapGestureRecognizer)
+
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+    }
+    
+    func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
+    {
+        if self.f == "Larkspur" {
+            self.f = "San Francisco"
+            self.fromImage.image = UIImage(named:"sanfrancisco")
+            self.toImage.image = UIImage(named:"marin")
+        } else {
+            self.f = "Larkspur"
+            self.fromImage.image = UIImage(named:"marin")
+            self.toImage.image = UIImage(named:"sanfrancisco")
+        }
+         getBoats()
     }
     
     // UITableView
     // Return rows in section
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.items.count;
     }
     
     // UITableView
     // Return cell within tableview
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = self.tableView.dequeueReusableCellWithIdentifier("ferryCell") as! FerryCell
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = self.tableView.dequeueReusableCell(withIdentifier: "ferryCell") as! FerryCell
 
         let dateAsString = self.items[indexPath.row].depart
-        let dateFormatter = NSDateFormatter()
+        let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
-        let date = dateFormatter.dateFromString(dateAsString)
+        let date = dateFormatter.date(from: dateAsString)
         
         dateFormatter.dateFormat = "h:mm a"
-        let date12 = dateFormatter.stringFromDate(date!)
+        let date12 = dateFormatter.string(from: date!)
         
         cell.startTime?.text = date12
         cell.toLocation?.text = self.items[indexPath.row].from + " to " + self.items[indexPath.row].to
@@ -62,8 +86,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         return cell
     }
     
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        self.performSegueWithIdentifier("viewMap", sender: self)
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        self.performSegue(withIdentifier: "viewMap", sender: self)
     }
     
     // Start finding location
@@ -75,7 +99,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     }
     
     // Display the location with placemark
-    func displayLocationInfo(placemark: CLPlacemark) {
+    func displayLocationInfo(_ placemark: CLPlacemark) {
         self.locationManager.stopUpdatingLocation()
         if placemark.locality == "Larkspur" {
             self.fromImage.image = UIImage(named:"marin")
@@ -93,7 +117,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Get the Boats from the API and then reload the table
     func getBoats() {
         // Get the times for the ferry
-        API.sharedInstance.getTimes(f) { (boats) -> Void in
+        API.sharedInstance.getTimes(from: f) { (boats) -> Void in
             self.items = boats
             //print(boats)
             self.tableView.reloadData()
@@ -102,8 +126,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     // LocationManager
     // Authentication Status Change
-    func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
-        if status == .AuthorizedWhenInUse {
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        if status == .authorizedWhenInUse {
             // authorized location status when app is in use; update current location
             locationManager.startUpdatingLocation()
             // implement additional logic if needed...
@@ -113,7 +137,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     // LocationManager
     // UpdatedLocations
-    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         CLGeocoder().reverseGeocodeLocation(manager.location!) { (placemarks, error) -> Void in
             if (error != nil) {
                 print("Reverse geocoder failed with error" + error!.localizedDescription)
@@ -131,7 +155,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     // Location Manager
     // Failed with Error
-    func locationManager(manager: CLLocationManager, didFailWithError error: NSError) {
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         getBoats()
         print("Error while updating location " + error.localizedDescription)
         

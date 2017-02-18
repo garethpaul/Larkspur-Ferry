@@ -20,8 +20,8 @@ final class API {
     
     // MARK: Helper for Ferry
     // Get the location of the ferry
-    func getLocation(completion: CLLocation -> Void) {
-        get("ferry/location", parameters: ["t": "1"]) { JSON in
+    func getLocation(completion: @escaping (CLLocation) -> Void) {
+        get(endpoint: "ferry/location", parameters: ["t": "1" as AnyObject]) { JSON in
             if let result = JSON as? JSONObject {
                 let lat = result["lat"] as! String
                 let lng = result["lng"] as! String
@@ -32,9 +32,9 @@ final class API {
     }
     
     // MARK: Helper for Ferry
-    func getTimes(from: String, completion: [Ferry] -> Void) {
+    func getTimes(from: String, completion: @escaping ([Ferry]) -> Void) {
         // Get the ferry from ...
-        get("ferry/larkspur", parameters: ["from": from]) { JSON in
+        get(endpoint: "ferry/larkspur", parameters: ["from": from as AnyObject]) { JSON in
             
             var boats: [Ferry] = []
             if let result = JSON as? JSONArray {
@@ -52,37 +52,65 @@ final class API {
 
     // MARK: Helper for Requests
     // Convenience method to perform a GET request on an API endpoint.
-    private func get(endpoint: String, parameters: [String: AnyObject]?, completion: AnyObject? -> Void) {
-        request(endpoint, method: "GET", encoding: .JSON, parameters: parameters, completion: completion)
+    private func get(endpoint: String, parameters: [String: AnyObject]?, completion: @escaping (AnyObject?) -> Void) {
+        request(endpoint: endpoint, encoding: URLEncoding.default, parameters: parameters, completion: completion)
     }
     
     // MARK: Helper for Requests
     // Convenience method to perform a POST request on an API endpoint.
-    private func post(endpoint: String, parameters: [String: AnyObject]?, completion: AnyObject? -> Void) {
-        request(endpoint, method: "POST", encoding: .JSON, parameters: parameters, completion: completion)
+    private func post(endpoint: String, parameters: [String: AnyObject]?, completion: @escaping(AnyObject?) -> Void) {
+        request(endpoint: endpoint, encoding: URLEncoding.default, parameters: parameters, completion: completion)
     }
+    
+    public typealias Parameters = [String: Any]
+    
+    
+
+
+    
+
     
     // MARK: Request helper for Alamofire
     // Perform a request on an API endpoint using Alamofire.
-    private func request(endpoint: String, method: String, encoding: Alamofire.ParameterEncoding, parameters: [String: AnyObject]?, completion: AnyObject? -> Void) {
-        let parameterString = parameters!.stringFromHttpParameters()
-        let URL = NSURL(string: apiBaseURL + endpoint + "?\(parameterString)")
-        let URLRequest = NSMutableURLRequest(URL: URL!)
-        URLRequest.HTTPMethod = method
-
-        let request = encoding.encode(URLRequest, parameters: nil).0
+    private func request(endpoint: String, encoding: Alamofire.ParameterEncoding, parameters: [String: AnyObject]?, completion: @escaping (AnyObject?) -> Void) {
         
-        Alamofire.request(request).responseJSON { (response) -> Void in
-            let result = response.result
-            switch result {
-            case .Success(let JSON):
-                completion(JSON)
-            case .Failure(let error):
-                print("Request failed with error: \(error)")
-                completion(nil)
+        let parameterString = parameters!.stringFromHttpParameters()
+        //let URL = Foundation.URL(string: apiBaseURL + endpoint + "?\(parameterString)")
+        //let URLRequest = NSMutableURLRequest(url: URL!)
+        //URLRequest.httpMethod = "GET"
+        let url = URL(string: apiBaseURL + endpoint + "?\(parameterString)")!
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "GET"
+
+        
+        do {
+            //let request = try encoding.encode(URLRequest as! URLRequestConvertible, with: nil)
+            Alamofire.request(urlRequest).responseJSON { (response) -> Void in
+                let result = response.result
+                switch result {
+                case .success(let JSONEncoding):
+                    completion(JSONEncoding as AnyObject?)
+                case .failure(let error):
+                    print("Request failed with error: \(error)")
+                    completion(nil)
+                }
             }
-            
+        } catch {
+            print("wow something went wrong")
         }
+        //
+        //_ = Alamofire.request(apiBaseURL + endpoint, parameters: parameters, encoding: URLEncoding(destination: .queryString)).responseJSON { (response) -> Void in
+        //    let result = response.result
+        //    switch result {
+        //    case .success(let JSONEncoding):
+        //        completion(JSONEncoding as AnyObject?)
+        //    case .failure(let error):
+        //        print("Request failed with error: \(error)")
+        //        completion(nil)
+        //    }
+        //    }
     }
-    
+        //let request = encoding.encode(URLRequest as! URLRequestConvertible, with: nil).0
+        
 }
+    

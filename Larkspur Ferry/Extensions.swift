@@ -10,7 +10,7 @@ import Foundation
 extension String {
     
     func toDouble() -> Double? {
-        return NSNumberFormatter().numberFromString(self)?.doubleValue
+        return NumberFormatter().number(from: self)?.doubleValue
     }
     /// Percent escape value to be added to a URL query value as specified in RFC 3986
     ///
@@ -21,10 +21,10 @@ extension String {
     /// :returns: Return precent escaped string.
     
     func stringByAddingPercentEncodingForURLQueryValue() -> String? {
-        let characterSet = NSMutableCharacterSet.alphanumericCharacterSet()
-        characterSet.addCharactersInString("-._~")
+        let characterSet = NSMutableCharacterSet.alphanumeric()
+        characterSet.addCharacters(in: "-._~")
         
-        return self.stringByAddingPercentEncodingWithAllowedCharacters(characterSet)
+        return self.addingPercentEncoding(withAllowedCharacters: characterSet as CharacterSet)
     }
     
 }
@@ -46,7 +46,7 @@ extension Dictionary {
             return "\(percentEscapedKey)=\(percentEscapedValue)"
         }
         
-        return parameterArray.joinWithSeparator("&")
+        return parameterArray.joined(separator: "&")
     }
     
 }

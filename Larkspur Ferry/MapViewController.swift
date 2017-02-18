@@ -22,7 +22,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         super.viewDidLoad()
         self.mapView.delegate = self
         getLocation()
-        let timer = NSTimer.scheduledTimerWithTimeInterval(30, target: self, selector: #selector(MapViewController.getLocation), userInfo: nil, repeats: true)
+        let timer = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(MapViewController.getLocation), userInfo: nil, repeats: true)
         timer.fire()
 
         // Do any additional setup after loading the view.
@@ -34,7 +34,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             self.mapView.removeAnnotations(self.mapView.annotations)
         }
 
-        API.sharedInstance.getLocation({ (location) -> Void in
+        API.sharedInstance.getLocation(completion: { (location) -> Void in
                 self.initialLocation = location
                 self.centerMapOnLocation(self.initialLocation)
                 let info1 = CustomPointAnnotation()
@@ -47,14 +47,14 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         })
     }
 
-    func centerMapOnLocation(location: CLLocation) {
+    func centerMapOnLocation(_ location: CLLocation) {
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
             regionRadius * 2.0, regionRadius * 2.0)
         mapView.setRegion(coordinateRegion, animated: true)
     }
 
-    func mapView(mapView: MKMapView,
-        viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+    func mapView(_ mapView: MKMapView,
+        viewFor annotation: MKAnnotation) -> MKAnnotationView? {
 
             if !(annotation is CustomPointAnnotation) {
                 return nil
@@ -62,7 +62,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
 
             let reuseId = "test"
 
-            var anView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId)
+            var anView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId)
             if anView == nil {
                 anView = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
                 anView!.canShowCallout = true
