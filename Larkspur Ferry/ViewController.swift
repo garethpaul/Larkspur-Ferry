@@ -31,7 +31,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("get location")
         findMyLocation()
         
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
@@ -69,19 +68,23 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // UITableView
     // Return cell within tableview
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = self.tableView.dequeueReusableCell(withIdentifier: "ferryCell") as! FerryCell
+        guard indexPath.row < self.items.count,
+            let cell = self.tableView.dequeueReusableCell(withIdentifier: "ferryCell") as? FerryCell else {
+                return UITableViewCell()
+        }
 
-        let dateAsString = self.items[indexPath.row].depart
+        let ferry = self.items[indexPath.row]
+        let dateAsString = ferry.depart
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"
         let date = dateFormatter.date(from: dateAsString)
         
         dateFormatter.dateFormat = "h:mm a"
-        let date12 = dateFormatter.string(from: date!)
+        let date12 = date.map { dateFormatter.string(from: $0) } ?? dateAsString
         
         cell.startTime?.text = date12
-        cell.toLocation?.text = self.items[indexPath.row].from + " to " + self.items[indexPath.row].to
-        cell.arrivalLabel?.text = "Arrival: " + self.items[indexPath.row].arrive
+        cell.toLocation?.text = ferry.from + " to " + ferry.to
+        cell.arrivalLabel?.text = "Arrival: " + ferry.arrive
         
         return cell
     }
@@ -119,7 +122,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         // Get the times for the ferry
         API.sharedInstance.getTimes(from: f) { (boats) -> Void in
             self.items = boats
-            //print(boats)
             self.tableView.reloadData()
         }
     }
@@ -131,6 +133,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
             // authorized location status when app is in use; update current location
             locationManager.startUpdatingLocation()
             // implement additional logic if needed...
+        } else if status == .denied || status == .restricted {
+            getBoats()
         }
         // implement logic for other status values if needed...
     }
@@ -138,16 +142,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // LocationManager
     // UpdatedLocations
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        CLGeocoder().reverseGeocodeLocation(manager.location!) { (placemarks, error) -> Void in
-            if (error != nil) {
-                print("Reverse geocoder failed with error" + error!.localizedDescription)
+        guard let location = locations.last else {
+            getBoats()
+            return
+        }
+
+        CLGeocoder().reverseGeocodeLocation(location) { (placemarks, error) -> Void in
+            if error != nil {
+                self.getBoats()
                 return
             }
-            if placemarks!.count > 0 {
-                let pm = placemarks![0] as CLPlacemark
+
+            if let pm = placemarks?.first {
                 self.displayLocationInfo(pm)
             } else {
-                print("Problem with the data received from geocoder")
+                self.getBoats()
             }
 
         }
@@ -157,7 +166,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Failed with Error
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         getBoats()
-        print("Error while updating location " + error.localizedDescription)
         
     }
 
@@ -168,4 +176,3 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
 
 
 }
-

@@ -40,9 +40,13 @@ extension Dictionary {
     /// :returns: String representation in the form of key1=value1&key2=value2 where the keys and values are percent escaped
     
     func stringFromHttpParameters() -> String {
-        let parameterArray = self.map { (key, value) -> String in
-            let percentEscapedKey = (key as! String).stringByAddingPercentEncodingForURLQueryValue()!
-            let percentEscapedValue = (value as! String).stringByAddingPercentEncodingForURLQueryValue()!
+        let parameterArray = self.flatMap { (key, value) -> String? in
+            guard let keyString = key as? String,
+                let percentEscapedKey = keyString.stringByAddingPercentEncodingForURLQueryValue(),
+                let percentEscapedValue = String(describing: value).stringByAddingPercentEncodingForURLQueryValue() else {
+                    return nil
+            }
+
             return "\(percentEscapedKey)=\(percentEscapedValue)"
         }
         

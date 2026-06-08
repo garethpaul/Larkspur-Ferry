@@ -25,6 +25,8 @@ Helpful reports include:
 ## Project Security Posture
 
 - This repository appears to be an Apple platform application or Swift sample. The active security scope is the code and documentation on the default branch.
+- The app uses an HTTPS ferry API endpoint and CoreLocation for in-app direction assistance. API and location failures should fall back without force-unwrapping or app debug logging.
+- Run `make check` after changing Swift sources, build scripts, Podfile metadata, plists, storyboards, assets, generated-output ignores, or security documentation.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.
@@ -34,6 +36,10 @@ Helpful reports include:
 ## Mobile Privacy Notes
 
 If this project requests device permissions such as location, camera, microphone, contacts, Bluetooth, health data, or local storage access, reports should describe the permission involved and whether sensitive data can be accessed, persisted, or transmitted unexpectedly. Please avoid testing against real third-party user data or accounts you do not control.
+
+For this app, location permission should remain when-in-use only. Reports should
+include whether ferry schedule loading still works when location authorization,
+location updates, geocoding, or map-location API responses are unavailable.
 
 ## Dependency and Supply Chain Security
 

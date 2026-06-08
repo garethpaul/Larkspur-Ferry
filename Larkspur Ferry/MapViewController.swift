@@ -35,15 +35,19 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
 
         API.sharedInstance.getLocation(completion: { (location) -> Void in
-                self.initialLocation = location
-                self.centerMapOnLocation(self.initialLocation)
-                let info1 = CustomPointAnnotation()
-                info1.coordinate = CLLocationCoordinate2DMake(self.initialLocation.coordinate.latitude, self.initialLocation.coordinate.longitude)
+            guard let location = location else {
+                return
+            }
 
-                info1.title = "Larkspur Ferry"
-                info1.subtitle = ""
-                info1.imageName = "boatLogo"
-                self.mapView.addAnnotation(info1)
+            self.initialLocation = location
+            self.centerMapOnLocation(self.initialLocation)
+            let info1 = CustomPointAnnotation()
+            info1.coordinate = CLLocationCoordinate2DMake(self.initialLocation.coordinate.latitude, self.initialLocation.coordinate.longitude)
+
+            info1.title = "Larkspur Ferry"
+            info1.subtitle = ""
+            info1.imageName = "boatLogo"
+            self.mapView.addAnnotation(info1)
         })
     }
 
@@ -62,19 +66,16 @@ class MapViewController: UIViewController, MKMapViewDelegate {
 
             let reuseId = "test"
 
-            var anView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId)
-            if anView == nil {
-                anView = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-                anView!.canShowCallout = true
-            }
-            else {
-                anView!.annotation = annotation
-            }
+            let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) ?? MKAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            annotationView.canShowCallout = true
+            annotationView.annotation = annotation
 
-            let cpa = annotation as! CustomPointAnnotation
-            anView!.image = UIImage(named:cpa.imageName)
+            guard let cpa = annotation as? CustomPointAnnotation else {
+                return annotationView
+            }
+            annotationView.image = UIImage(named:cpa.imageName)
 
-            return anView
+            return annotationView
     }
 
 

@@ -2,7 +2,7 @@
 
 set -eu
 
-function ci_build() {
+ci_build() {
     NAME=$1
     pod install
     xcodebuild -workspace "Larkspur Ferry.xcworkspace" \
@@ -13,7 +13,7 @@ function ci_build() {
                build
 }
 
-function ci_test() {
+ci_test() {
     NAME=$1
 
     pod install
@@ -26,5 +26,9 @@ function ci_test() {
 }
 
 
+if ! command -v pod >/dev/null 2>&1 || ! command -v xcodebuild >/dev/null 2>&1; then
+    echo "pod or xcodebuild unavailable; skipping Xcode build on this host."
+    exit 0
+fi
 
 ci_build "iPhone 5"

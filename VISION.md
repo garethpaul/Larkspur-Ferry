@@ -12,12 +12,17 @@ Project context lives in [`README.md`](README.md).
 
 The goal is to keep the app useful, verifiable, and clear about its data source.
 
+Current baseline: `make check` runs `scripts/check-baseline.py` to verify the
+build script, CocoaPods metadata, Swift API parsing, location fallbacks,
+storyboards, plists, assets, generated metadata ignores, and documentation.
+
 The current focus is:
 
 Priority:
 
 - Preserve ferry schedule and map-location flows
 - Keep API endpoint behavior visible and documented
+- Keep malformed API payloads and unavailable location data from crashing the app
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
 
@@ -32,6 +37,7 @@ Contribution rules:
 
 - One PR = one focused API, map, schedule, build, or documentation change.
 - Verify app behavior after map or API changes.
+- Run `make check` before pushing API, location, build, plist, storyboard, asset, or documentation changes.
 - Keep generated signing files and local paths out of git.
 - Update docs when endpoint or response shapes change.
 
@@ -43,6 +49,8 @@ Canonical security policy and reporting:
 
 Transit data should be accurate and sourced. Endpoint changes should use HTTPS,
 handle failures visibly, and avoid exposing private credentials.
+Location should remain user-authorized, optional, and backed by schedule-loading
+fallbacks when unavailable.
 
 ## What We Will Not Merge (For Now)
 
