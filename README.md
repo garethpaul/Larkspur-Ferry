@@ -1,5 +1,8 @@
 # Larkspur-Ferry
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/Larkspur-Ferry` is an Apple platform application or Swift sample. iOS App Larkspur Ferry
@@ -80,4 +83,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > Larkspur-Ferry <!-- README-OVERVIEW-IMAGE --> [![Build Status](https://travis-ci.org/garethpaul/Larkspur-Ferry.svg?branch=gpj%2Fadd-testing)](https://travis-ci.org/garethpaul/Larkspur-Ferry) Larkspur Ferry App
-
