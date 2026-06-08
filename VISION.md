@@ -43,3 +43,6 @@ handle failures visibly, and avoid exposing private credentials.
 - Schedule/location changes without data-source notes
 - Broad Swift migration bundled with transit behavior changes
 - Generated signing material or local paths
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
