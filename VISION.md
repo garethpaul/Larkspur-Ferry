@@ -34,6 +34,11 @@ Contribution rules:
 
 ## Security And Data
 
+Canonical security policy and reporting:
+
+- [`SECURITY.md`](SECURITY.md)
+
+
 Transit data should be accurate and sourced. Endpoint changes should use HTTPS,
 handle failures visibly, and avoid exposing private credentials.
 
