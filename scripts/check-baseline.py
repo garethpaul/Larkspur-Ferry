@@ -83,6 +83,7 @@ def main():
         "VISION.md",
         "build.sh",
         "docs/plans/2026-06-08-larkspur-ferry-baseline.md",
+        "docs/plans/2026-06-08-map-refresh-timer-lifecycle.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -156,6 +157,7 @@ def main():
     podfile = read("Podfile")
     podlock = read("Podfile.lock")
     plan = PLAN.read_text(encoding="utf-8") if PLAN.exists() else ""
+    timer_plan = read("docs/plans/2026-06-08-map-refresh-timer-lifecycle.md")
 
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     require(shell_result.returncode == 0,
@@ -217,6 +219,18 @@ def main():
     require("guard let location = location" in map_controller and "as? CustomPointAnnotation" in map_controller,
             "map flow must guard missing API location and annotation casts",
             failures)
+    require("var locationRefreshTimer: Timer?" in map_controller and "func startLocationRefreshTimer()" in map_controller,
+            "map flow must keep the ferry-location refresh timer visible and restartable",
+            failures)
+    require("viewWillAppear" in map_controller and "startLocationRefreshTimer()" in map_controller,
+            "map flow must start the refresh timer when the map appears",
+            failures)
+    require("viewWillDisappear" in map_controller and "locationRefreshTimer?.invalidate()" in map_controller and "locationRefreshTimer = nil" in map_controller,
+            "map flow must invalidate the refresh timer when the map disappears",
+            failures)
+    require("let timer = Timer.scheduledTimer" not in map_controller,
+            "map flow must not hide the scheduled timer in a local variable",
+            failures)
     require('var imageName = ""' in pin_annotation,
             "custom annotation image name must not be implicitly unwrapped",
             failures)
@@ -238,6 +252,9 @@ def main():
     require("Larkspur Ferry.xcworkspace" in readme,
             "README must direct CocoaPods users to the workspace",
             failures)
+    require("map refresh timer" in readme and "map refresh timer" in vision and "map refresh timer" in security,
+            "docs must describe map refresh timer lifecycle handling",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -247,11 +264,14 @@ def main():
     require("make check" in security and "location" in security.lower() and "API" in security,
             "SECURITY must document location/API static guardrails",
             failures)
-    require("build.sh" in changes and "force-unwrapping" in changes and ".DS_Store" in changes,
-            "CHANGES must record build, force unwrap, and generated metadata hardening",
+    require("build.sh" in changes and "force-unwrapping" in changes and ".DS_Store" in changes and "map refresh timer" in changes,
+            "CHANGES must record build, force unwrap, generated metadata, and timer lifecycle hardening",
             failures)
     require("status: completed" in plan,
             "plan must be marked completed",
+            failures)
+    require("status: completed" in timer_plan,
+            "map refresh timer lifecycle plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

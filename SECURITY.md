@@ -26,6 +26,7 @@ Helpful reports include:
 
 - This repository appears to be an Apple platform application or Swift sample. The active security scope is the code and documentation on the default branch.
 - The app uses an HTTPS ferry API endpoint and CoreLocation for in-app direction assistance. API and location failures should fall back without force-unwrapping or app debug logging.
+- The map refresh timer should be tied to the map screen lifecycle so ferry-location polling stops when the map view disappears.
 - Run `make check` after changing Swift sources, build scripts, Podfile metadata, plists, storyboards, assets, generated-output ignores, or security documentation.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.

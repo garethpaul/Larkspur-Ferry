@@ -17,15 +17,30 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     @IBOutlet weak var mapView: MKMapView!
     var initialLocation = CLLocation(latitude: 37.79984, longitude: -122.38921)
     let regionRadius: CLLocationDistance = 4200
+    var locationRefreshTimer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         self.mapView.delegate = self
-        getLocation()
-        let timer = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(MapViewController.getLocation), userInfo: nil, repeats: true)
-        timer.fire()
 
         // Do any additional setup after loading the view.
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        startLocationRefreshTimer()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        locationRefreshTimer?.invalidate()
+        locationRefreshTimer = nil
+    }
+
+    func startLocationRefreshTimer() {
+        locationRefreshTimer?.invalidate()
+        locationRefreshTimer = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(MapViewController.getLocation), userInfo: nil, repeats: true)
+        locationRefreshTimer?.fire()
     }
 
     func getLocation() {

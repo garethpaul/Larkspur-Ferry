@@ -56,10 +56,11 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Open `Larkspur Ferry.xcworkspace` in Xcode after `pod install`, choose the app or sample scheme, and run it on the matching simulator/device.
 - Run `./build.sh` when the required platform toolchain is installed.
 - `build.sh` skips cleanly on hosts without CocoaPods or Xcode so static checks can run on non-macOS machines.
+- The map refresh timer starts while the map screen is visible and is invalidated when the screen disappears.
 
 ## Testing and Verification
 
-- `make check` runs `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, location fallbacks, and generated metadata ignores.
+- `make check` runs `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, location fallbacks, map refresh timer lifecycle handling, and generated metadata ignores.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

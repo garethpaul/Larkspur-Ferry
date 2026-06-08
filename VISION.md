@@ -24,6 +24,7 @@ Priority:
 - Preserve ferry schedule and map-location flows
 - Keep API endpoint behavior visible and documented
 - Keep malformed API payloads and unavailable location data from crashing the app
+- Keep the map refresh timer tied to the map screen lifecycle
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
 
@@ -41,6 +42,7 @@ Contribution rules:
 - Run `make check` before pushing API, location, build, plist, storyboard, asset, or documentation changes.
 - Keep generated signing files and local paths out of git.
 - Update docs when endpoint or response shapes change.
+- Preserve map refresh timer lifecycle handling when changing the map flow.
 
 ## Security And Data
 
