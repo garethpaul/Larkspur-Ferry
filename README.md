@@ -82,4 +82,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> Larkspur-Ferry <!-- README-OVERVIEW-IMAGE --> [![Build Status](https://travis-ci.org/garethpaul/Larkspur-Ferry.svg?branch=gpj%2Fadd-testing)](https://travis-ci.org/garethpaul/Larkspur-Ferry) Larkspur Ferry App
+> Larkspur-Ferry [![Build Status](https://travis-ci.org/garethpaul/Larkspur-Ferry.svg?branch=gpj%2Fadd-testing)](https://travis-ci.org/garethpaul/Larkspur-Ferry) Larkspur Ferry App
