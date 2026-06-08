@@ -37,7 +37,7 @@ Contribution rules:
 Transit data should be accurate and sourced. Endpoint changes should use HTTPS,
 handle failures visibly, and avoid exposing private credentials.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Hardcoded private API credentials
 - Schedule/location changes without data-source notes
