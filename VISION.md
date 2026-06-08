@@ -1,5 +1,8 @@
 ## Larkspur Ferry Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 Larkspur Ferry is a Swift iOS app that displays ferry schedule and location
 information, including a map view for the current ferry position.
 
