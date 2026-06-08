@@ -12,9 +12,10 @@ Project context lives in [`README.md`](README.md).
 
 The goal is to keep the app useful, verifiable, and clear about its data source.
 
-Current baseline: `make check` runs `scripts/check-baseline.py` to verify the
-build script, CocoaPods metadata, Swift API parsing, location fallbacks,
-storyboards, plists, assets, generated metadata ignores, and documentation.
+Current baseline: `make check` runs `scripts/check-baseline.py` and the guarded
+`build.sh` path to verify the build script, CocoaPods metadata, Swift API
+parsing, location fallbacks, storyboards, plists, assets, generated metadata
+ignores, and documentation.
 
 The current focus is:
 

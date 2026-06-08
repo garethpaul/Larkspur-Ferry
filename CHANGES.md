@@ -7,3 +7,4 @@
 - Removed app debug logging from location and network failure paths.
 - Made location fallback behavior show ferry times when authorization, geocoding, or location updates are unavailable.
 - Removed the tracked `.DS_Store` from the asset catalog and added a static `make check` baseline.
+- Pointed local Xcode setup at the CocoaPods workspace and corrected generated integration docs.

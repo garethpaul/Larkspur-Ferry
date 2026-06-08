@@ -30,7 +30,7 @@
 
   <rect x="808" y="286" width="316" height="276" rx="14" fill="#fff7ed" stroke="#fed7aa"/>
   <text x="834" y="328" font-size="24" font-weight="700" fill="#c2410c">Review Focus</text>
-  <text x="834" y="370" font-size="19" fill="#1f2937">Integrations: Twitter</text>
+  <text x="834" y="370" font-size="19" fill="#1f2937">Integrations: Alamofire, MapKit</text>
   <text x="834" y="466" font-size="19" fill="#1f2937">Sensitive surfaces: external_api,</text>
 <text x="834" y="490" font-size="19" fill="#1f2937">file_parsing, mobile_privacy,</text>
 <text x="834" y="514" font-size="19" fill="#1f2937">network</text>

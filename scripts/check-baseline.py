@@ -150,6 +150,8 @@ def main():
     vision = read("VISION.md")
     security = read("SECURITY.md")
     changes = read("CHANGES.md")
+    makefile = read("Makefile")
+    overview = read("docs/readme-overview.svg")
     gitignore = read(".gitignore")
     podfile = read("Podfile")
     podlock = read("Podfile.lock")
@@ -164,6 +166,9 @@ def main():
             failures)
     require("command -v pod" in build_script and "command -v xcodebuild" in build_script and "skipping Xcode build" in build_script,
             "build.sh must skip cleanly when CocoaPods or Xcode are unavailable",
+            failures)
+    require("./build.sh" in makefile,
+            "make check must invoke the guarded build script",
             failures)
 
     require(app_plist.get("NSLocationWhenInUseUsageDescription"),
@@ -229,6 +234,12 @@ def main():
             failures)
     require("make check" in readme and "scripts/check-baseline.py" in readme and "location" in readme.lower(),
             "README must document static verification and location/API guardrails",
+            failures)
+    require("Larkspur Ferry.xcworkspace" in readme,
+            "README must direct CocoaPods users to the workspace",
+            failures)
+    require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
+            "overview SVG must name the real app integrations",
             failures)
     require("scripts/check-baseline.py" in vision and "API" in vision and "location" in vision.lower(),
             "VISION must describe the current Larkspur Ferry baseline",
