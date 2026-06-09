@@ -48,7 +48,7 @@ extension Dictionary {
             }
 
             return "\(percentEscapedKey)=\(percentEscapedValue)"
-        }
+        }.sorted()
         
         return parameterArray.joined(separator: "&")
     }

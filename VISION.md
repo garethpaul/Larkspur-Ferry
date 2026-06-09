@@ -23,6 +23,7 @@ Priority:
 
 - Preserve ferry schedule and map-location flows
 - Keep API endpoint behavior visible and documented
+- Keep API request construction on deterministic query parameter ordering
 - Keep malformed API payloads and unavailable location data from crashing the app
 - Keep initial direction lookup as a single-shot location flow with schedule fallback
 - Keep the map refresh timer tied to the map screen lifecycle

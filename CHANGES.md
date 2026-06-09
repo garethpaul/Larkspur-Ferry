@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-06-09
+
+- Sorted percent-encoded API parameter pairs for deterministic query strings.
+
 ## 2026-06-08
 
 - Fixed `build.sh` to use POSIX shell function syntax and skip cleanly when CocoaPods or Xcode are unavailable.

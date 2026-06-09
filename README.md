@@ -59,10 +59,11 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - The map refresh timer starts while the map screen is visible and is invalidated when the screen disappears.
 - Ferry annotation refresh removes stale ferry pins without clearing unrelated map annotations.
 - The initial direction lookup is a single-shot location flow; unavailable or failed CoreLocation/geocoder data falls back to schedule loading.
+- API request parameters use deterministic query ordering after percent encoding.
 
 ## Testing and Verification
 
-- `make check` runs `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, and generated metadata ignores.
+- `make check` runs `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, and generated metadata ignores.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

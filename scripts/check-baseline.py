@@ -86,6 +86,7 @@ def main():
         "docs/plans/2026-06-08-location-update-single-shot.md",
         "docs/plans/2026-06-08-map-annotation-refresh.md",
         "docs/plans/2026-06-08-map-refresh-timer-lifecycle.md",
+        "docs/plans/2026-06-09-deterministic-http-parameters.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -161,6 +162,7 @@ def main():
     plan = PLAN.read_text(encoding="utf-8") if PLAN.exists() else ""
     timer_plan = read("docs/plans/2026-06-08-map-refresh-timer-lifecycle.md")
     location_plan = read("docs/plans/2026-06-08-location-update-single-shot.md")
+    parameter_plan = read("docs/plans/2026-06-09-deterministic-http-parameters.md")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
 
@@ -211,6 +213,9 @@ def main():
             failures)
     require("guard let keyString" in extensions and "String(describing: value)" in extensions,
             "HTTP parameter encoding must avoid force-casts and force-unwrapped escapes",
+            failures)
+    require("}.sorted()" in extensions and 'joined(separator: "&")' in extensions,
+            "HTTP parameter encoding must produce deterministic query parameter order",
             failures)
     require("guard indexPath.row < self.items.count" in view_controller and "date.map" in view_controller,
             "table rendering must guard indexes, cell casts, and invalid ferry times",
@@ -282,6 +287,11 @@ def main():
     require("single-shot location" in readme and "single-shot location" in vision and "single-shot location" in security,
             "docs must describe single-shot location lookup handling",
             failures)
+    require("deterministic query" in readme.lower() and
+            "deterministic query" in vision.lower() and
+            "deterministic query" in security.lower(),
+            "docs must describe deterministic query parameter encoding",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -297,6 +307,9 @@ def main():
     require("ferry annotation refresh" in changes,
             "CHANGES must record ferry annotation refresh hardening",
             failures)
+    require("deterministic query" in changes.lower(),
+            "CHANGES must record deterministic query parameter encoding",
+            failures)
     require("status: completed" in plan,
             "plan must be marked completed",
             failures)
@@ -308,6 +321,9 @@ def main():
             failures)
     require("status: completed" in annotation_plan,
             "map annotation refresh plan must be marked completed",
+            failures)
+    require("status: completed" in parameter_plan,
+            "deterministic HTTP parameter plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):
