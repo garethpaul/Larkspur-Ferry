@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added local `make lint`, `make test`, and `make build` gate aliases for the
+  static Larkspur Ferry baseline and guarded build path.
 - Kept locale-independent coordinate parsing for ferry API latitude and
   longitude strings across device regions.
 - Sorted percent-encoded API parameter pairs for deterministic query strings.

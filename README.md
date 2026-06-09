@@ -28,7 +28,7 @@ Additional scan context:
 
 - Source directories: Larkspur Ferry, Larkspur FerryUITests
 - Dependency and build manifests: Podfile, Podfile.lock
-- Entry points or build surfaces: `make check`, build.sh, Larkspur Ferry.xcodeproj
+- Entry points or build surfaces: `make lint`, `make test`, `make build`, `make check`, build.sh, Larkspur Ferry.xcodeproj
 - Test-looking files: Larkspur FerryUITests/Info.plist, Larkspur FerryUITests/Larkspur_FerryUITests.swift, Larkspur FerryUITests/SnapshotHelper.swift
 
 ## Getting Started
@@ -36,7 +36,7 @@ Additional scan context:
 ### Prerequisites
 
 - Git
-- Python 3 for static verification with `make check`
+- Python 3 for static verification with `make lint`, `make test`, `make build`, and `make check`
 - macOS with Xcode for building Apple platform projects
 - CocoaPods if dependencies need to be installed
 
@@ -45,6 +45,9 @@ Additional scan context:
 ```bash
 git clone https://github.com/garethpaul/Larkspur-Ferry.git
 cd Larkspur-Ferry
+make lint
+make test
+make build
 make check
 pod install
 ```
@@ -65,7 +68,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Testing and Verification
 
-- `make check` runs `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, locale-independent coordinate parsing, POSIX schedule time parsing, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, and generated metadata ignores.
+- `make lint`, `make test`, `make build`, and `make check` run `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, locale-independent coordinate parsing, POSIX schedule time parsing, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, and generated metadata ignores.
+- The `lint`, `test`, and `build` targets intentionally alias the existing
+  check path so the standard local gate commands stay available while preserving
+  the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -87,9 +93,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
-- Run `make check` before pushing Swift, build-script, Podfile, storyboard, plist, asset, or security documentation changes.
+- Run `make lint`, `make test`, `make build`, and `make check` before pushing Swift, build-script, Podfile, storyboard, plist, asset, or security documentation changes.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
 
 ## Contributing
 
