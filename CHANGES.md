@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Kept locale-independent coordinate parsing for ferry API latitude and
+  longitude strings across device regions.
 - Sorted percent-encoded API parameter pairs for deterministic query strings.
 
 ## 2026-06-08

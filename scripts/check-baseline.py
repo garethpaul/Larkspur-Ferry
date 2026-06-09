@@ -87,6 +87,7 @@ def main():
         "docs/plans/2026-06-08-map-annotation-refresh.md",
         "docs/plans/2026-06-08-map-refresh-timer-lifecycle.md",
         "docs/plans/2026-06-09-deterministic-http-parameters.md",
+        "docs/plans/2026-06-09-locale-independent-coordinate-parsing.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -163,6 +164,7 @@ def main():
     timer_plan = read("docs/plans/2026-06-08-map-refresh-timer-lifecycle.md")
     location_plan = read("docs/plans/2026-06-08-location-update-single-shot.md")
     parameter_plan = read("docs/plans/2026-06-09-deterministic-http-parameters.md")
+    coordinate_plan = read("docs/plans/2026-06-09-locale-independent-coordinate-parsing.md")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
 
@@ -213,6 +215,9 @@ def main():
             failures)
     require("guard let keyString" in extensions and "String(describing: value)" in extensions,
             "HTTP parameter encoding must avoid force-casts and force-unwrapped escapes",
+            failures)
+    require("return Double(self)" in extensions and "NumberFormatter().number(from:" not in extensions,
+            "coordinate parsing must stay locale-independent for ferry API latitude and longitude strings",
             failures)
     require("}.sorted()" in extensions and 'joined(separator: "&")' in extensions,
             "HTTP parameter encoding must produce deterministic query parameter order",
@@ -292,6 +297,11 @@ def main():
             "deterministic query" in security.lower(),
             "docs must describe deterministic query parameter encoding",
             failures)
+    require("locale-independent coordinate parsing" in readme.lower() and
+            "locale-independent coordinate parsing" in vision.lower() and
+            "locale-independent coordinate parsing" in security.lower(),
+            "docs must describe locale-independent coordinate parsing",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -310,6 +320,9 @@ def main():
     require("deterministic query" in changes.lower(),
             "CHANGES must record deterministic query parameter encoding",
             failures)
+    require("locale-independent coordinate parsing" in changes.lower(),
+            "CHANGES must record locale-independent coordinate parsing",
+            failures)
     require("status: completed" in plan,
             "plan must be marked completed",
             failures)
@@ -324,6 +337,9 @@ def main():
             failures)
     require("status: completed" in parameter_plan,
             "deterministic HTTP parameter plan must be marked completed",
+            failures)
+    require("status: completed" in coordinate_plan,
+            "locale-independent coordinate parsing plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

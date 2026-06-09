@@ -10,7 +10,7 @@ import Foundation
 extension String {
     
     func toDouble() -> Double? {
-        return NumberFormatter().number(from: self)?.doubleValue
+        return Double(self)
     }
     /// Percent escape value to be added to a URL query value as specified in RFC 3986
     ///
