@@ -95,10 +95,17 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     // Start finding location
     func findMyLocation() {
+        locationUpdated = false
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
+    }
+
+    func loadScheduleWithoutLocation() {
+        locationUpdated = true
+        locationManager.stopUpdatingLocation()
+        getBoats()
     }
     
     // Display the location with placemark
@@ -131,10 +138,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         if status == .authorizedWhenInUse {
             // authorized location status when app is in use; update current location
+            locationUpdated = false
             locationManager.startUpdatingLocation()
             // implement additional logic if needed...
         } else if status == .denied || status == .restricted {
-            getBoats()
+            loadScheduleWithoutLocation()
         }
         // implement logic for other status values if needed...
     }
@@ -142,21 +150,27 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // LocationManager
     // UpdatedLocations
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard !locationUpdated else {
+            return
+        }
+        locationUpdated = true
+
         guard let location = locations.last else {
-            getBoats()
+            loadScheduleWithoutLocation()
             return
         }
 
+        locationManager.stopUpdatingLocation()
         CLGeocoder().reverseGeocodeLocation(location) { (placemarks, error) -> Void in
             if error != nil {
-                self.getBoats()
+                self.loadScheduleWithoutLocation()
                 return
             }
 
             if let pm = placemarks?.first {
                 self.displayLocationInfo(pm)
             } else {
-                self.getBoats()
+                self.loadScheduleWithoutLocation()
             }
 
         }
@@ -165,7 +179,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Location Manager
     // Failed with Error
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        getBoats()
+        loadScheduleWithoutLocation()
         
     }
 

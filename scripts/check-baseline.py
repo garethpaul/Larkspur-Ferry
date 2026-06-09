@@ -83,6 +83,7 @@ def main():
         "VISION.md",
         "build.sh",
         "docs/plans/2026-06-08-larkspur-ferry-baseline.md",
+        "docs/plans/2026-06-08-location-update-single-shot.md",
         "docs/plans/2026-06-08-map-refresh-timer-lifecycle.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
@@ -158,6 +159,7 @@ def main():
     podlock = read("Podfile.lock")
     plan = PLAN.read_text(encoding="utf-8") if PLAN.exists() else ""
     timer_plan = read("docs/plans/2026-06-08-map-refresh-timer-lifecycle.md")
+    location_plan = read("docs/plans/2026-06-08-location-update-single-shot.md")
 
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     require(shell_result.returncode == 0,
@@ -213,6 +215,12 @@ def main():
     require("locations.last" in view_controller and "placemarks?.first" in view_controller and "status == .denied" in view_controller,
             "location handling must guard missing locations, geocoder data, and denied authorization",
             failures)
+    require("func loadScheduleWithoutLocation()" in view_controller and "locationUpdated = false" in view_controller and "guard !locationUpdated else" in view_controller,
+            "location handling must reset lookup state, ignore repeated updates, and use a shared schedule fallback",
+            failures)
+    require("locationManager.stopUpdatingLocation()" in view_controller and "didFailWithError" in view_controller and "loadScheduleWithoutLocation()" in view_controller,
+            "location handling must stop updates on successful and unavailable location paths",
+            failures)
     require("print(" not in strip_swift_line_comments(view_controller),
             "app location flow must not print debug output",
             failures)
@@ -255,6 +263,9 @@ def main():
     require("map refresh timer" in readme and "map refresh timer" in vision and "map refresh timer" in security,
             "docs must describe map refresh timer lifecycle handling",
             failures)
+    require("single-shot location" in readme and "single-shot location" in vision and "single-shot location" in security,
+            "docs must describe single-shot location lookup handling",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -264,14 +275,17 @@ def main():
     require("make check" in security and "location" in security.lower() and "API" in security,
             "SECURITY must document location/API static guardrails",
             failures)
-    require("build.sh" in changes and "force-unwrapping" in changes and ".DS_Store" in changes and "map refresh timer" in changes,
-            "CHANGES must record build, force unwrap, generated metadata, and timer lifecycle hardening",
+    require("build.sh" in changes and "force-unwrapping" in changes and ".DS_Store" in changes and "map refresh timer" in changes and "single-shot location" in changes,
+            "CHANGES must record build, force unwrap, generated metadata, timer lifecycle, and location lookup hardening",
             failures)
     require("status: completed" in plan,
             "plan must be marked completed",
             failures)
     require("status: completed" in timer_plan,
             "map refresh timer lifecycle plan must be marked completed",
+            failures)
+    require("status: completed" in location_plan,
+            "location update single-shot plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

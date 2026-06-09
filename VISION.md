@@ -14,8 +14,8 @@ The goal is to keep the app useful, verifiable, and clear about its data source.
 
 Current baseline: `make check` runs `scripts/check-baseline.py` and the guarded
 `build.sh` path to verify the build script, CocoaPods metadata, Swift API
-parsing, location fallbacks, storyboards, plists, assets, generated metadata
-ignores, and documentation.
+parsing, single-shot location fallbacks, storyboards, plists, assets,
+generated metadata ignores, and documentation.
 
 The current focus is:
 
@@ -24,6 +24,7 @@ Priority:
 - Preserve ferry schedule and map-location flows
 - Keep API endpoint behavior visible and documented
 - Keep malformed API payloads and unavailable location data from crashing the app
+- Keep initial direction lookup as a single-shot location flow with schedule fallback
 - Keep the map refresh timer tied to the map screen lifecycle
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
@@ -42,6 +43,7 @@ Contribution rules:
 - Run `make check` before pushing API, location, build, plist, storyboard, asset, or documentation changes.
 - Keep generated signing files and local paths out of git.
 - Update docs when endpoint or response shapes change.
+- Preserve single-shot location lookup handling when changing the direction flow.
 - Preserve map refresh timer lifecycle handling when changing the map flow.
 
 ## Security And Data
