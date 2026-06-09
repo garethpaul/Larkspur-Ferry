@@ -88,6 +88,7 @@ def main():
         "docs/plans/2026-06-08-map-refresh-timer-lifecycle.md",
         "docs/plans/2026-06-09-deterministic-http-parameters.md",
         "docs/plans/2026-06-09-locale-independent-coordinate-parsing.md",
+        "docs/plans/2026-06-09-posix-schedule-time-parsing.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -165,6 +166,7 @@ def main():
     location_plan = read("docs/plans/2026-06-08-location-update-single-shot.md")
     parameter_plan = read("docs/plans/2026-06-09-deterministic-http-parameters.md")
     coordinate_plan = read("docs/plans/2026-06-09-locale-independent-coordinate-parsing.md")
+    schedule_time_plan = read("docs/plans/2026-06-09-posix-schedule-time-parsing.md")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
 
@@ -224,6 +226,9 @@ def main():
             failures)
     require("guard indexPath.row < self.items.count" in view_controller and "date.map" in view_controller,
             "table rendering must guard indexes, cell casts, and invalid ferry times",
+            failures)
+    require('dateFormatter.locale = Locale(identifier: "en_US_POSIX")' in view_controller,
+            "schedule time parsing must use a POSIX locale for fixed-format API times",
             failures)
     require("locations.last" in view_controller and "placemarks?.first" in view_controller and "status == .denied" in view_controller,
             "location handling must guard missing locations, geocoder data, and denied authorization",
@@ -302,6 +307,11 @@ def main():
             "locale-independent coordinate parsing" in security.lower(),
             "docs must describe locale-independent coordinate parsing",
             failures)
+    require("posix schedule time parsing" in readme.lower() and
+            "posix schedule time parsing" in vision.lower() and
+            "posix schedule time parsing" in security.lower(),
+            "docs must describe POSIX schedule time parsing",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -323,6 +333,9 @@ def main():
     require("locale-independent coordinate parsing" in changes.lower(),
             "CHANGES must record locale-independent coordinate parsing",
             failures)
+    require("posix schedule time parsing" in changes.lower(),
+            "CHANGES must record POSIX schedule time parsing",
+            failures)
     require("status: completed" in plan,
             "plan must be marked completed",
             failures)
@@ -340,6 +353,9 @@ def main():
             failures)
     require("status: completed" in coordinate_plan,
             "locale-independent coordinate parsing plan must be marked completed",
+            failures)
+    require("status: completed" in schedule_time_plan,
+            "POSIX schedule time parsing plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

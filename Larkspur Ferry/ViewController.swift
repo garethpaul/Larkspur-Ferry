@@ -76,6 +76,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         let ferry = self.items[indexPath.row]
         let dateAsString = ferry.depart
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "HH:mm"
         let date = dateFormatter.date(from: dateAsString)
         

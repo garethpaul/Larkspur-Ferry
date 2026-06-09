@@ -28,6 +28,7 @@ Helpful reports include:
 - The app uses an HTTPS ferry API endpoint and CoreLocation for in-app direction assistance. API and location failures should fall back without force-unwrapping or app debug logging.
 - Deterministic query parameter encoding should run after percent encoding so request construction is stable during review.
 - Locale-independent coordinate parsing should handle ferry API latitude and longitude strings consistently across device regions.
+- POSIX schedule time parsing should handle fixed-format ferry API departure strings consistently across device regions.
 - The initial direction lookup should remain a single-shot location flow that stops CoreLocation updates before falling back to schedule loading.
 - The map refresh timer should be tied to the map screen lifecycle so ferry-location polling stops when the map view disappears.
 - Ferry annotation refresh should remove stale ferry pins without clearing unrelated map annotations.
