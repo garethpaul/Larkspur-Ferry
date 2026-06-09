@@ -26,6 +26,7 @@ Priority:
 - Keep API request construction on deterministic query parameter ordering
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
 - Keep POSIX schedule time parsing for fixed-format ferry API departure values
+- Keep main-thread UI updates for schedule table and map API callbacks
 - Keep malformed API payloads and unavailable location data from crashing the app
 - Keep initial direction lookup as a single-shot location flow with schedule fallback
 - Keep the map refresh timer tied to the map screen lifecycle
@@ -52,6 +53,7 @@ Contribution rules:
 - Update docs when endpoint or response shapes change.
 - Preserve single-shot location lookup handling when changing the direction flow.
 - Preserve map refresh timer lifecycle handling when changing the map flow.
+- Preserve main-thread UI updates when changing schedule table or map callbacks.
 
 ## Security And Data
 

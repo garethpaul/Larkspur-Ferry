@@ -8,6 +8,8 @@
   longitude strings across device regions.
 - Sorted percent-encoded API parameter pairs for deterministic query strings.
 - Added POSIX schedule time parsing for fixed-format ferry API departure values.
+- Kept schedule table and map callbacks on main-thread UI updates before
+  mutating UIKit or MapKit state.
 
 ## 2026-06-08
 

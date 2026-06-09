@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs/plans/2026-06-08-larkspur-ferry-baseline.md"
+MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-09-main-thread-ui-updates.md"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
@@ -90,6 +91,7 @@ def main():
         "docs/plans/2026-06-09-locale-independent-coordinate-parsing.md",
         "docs/plans/2026-06-09-make-gate-aliases.md",
         "docs/plans/2026-06-09-posix-schedule-time-parsing.md",
+        "docs/plans/2026-06-09-main-thread-ui-updates.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -169,6 +171,7 @@ def main():
     coordinate_plan = read("docs/plans/2026-06-09-locale-independent-coordinate-parsing.md")
     make_gates_plan = read("docs/plans/2026-06-09-make-gate-aliases.md")
     schedule_time_plan = read("docs/plans/2026-06-09-posix-schedule-time-parsing.md")
+    main_thread_plan = MAIN_THREAD_PLAN.read_text(encoding="utf-8") if MAIN_THREAD_PLAN.exists() else ""
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
 
@@ -230,6 +233,12 @@ def main():
     require("guard indexPath.row < self.items.count" in view_controller and "date.map" in view_controller,
             "table rendering must guard indexes, cell casts, and invalid ferry times",
             failures)
+    require("API.sharedInstance.getTimes(from: f) { [weak self]" in view_controller and
+            "DispatchQueue.main.async" in view_controller and
+            "guard let viewController = self else" in view_controller and
+            "viewController.tableView.reloadData()" in view_controller,
+            "schedule API callback must update table state on the main queue without retaining the view controller",
+            failures)
     require('dateFormatter.locale = Locale(identifier: "en_US_POSIX")' in view_controller,
             "schedule time parsing must use a POSIX locale for fixed-format API times",
             failures)
@@ -247,6 +256,12 @@ def main():
             failures)
     require("guard let location = location" in map_controller and "as? CustomPointAnnotation" in map_controller,
             "map flow must guard missing API location and annotation casts",
+            failures)
+    require("API.sharedInstance.getLocation(completion: { [weak self]" in map_controller and
+            "DispatchQueue.main.async" in map_controller and
+            "guard let viewController = self else" in map_controller and
+            "viewController.mapView.addAnnotation(info1)" in map_controller,
+            "map API callback must update MapKit state on the main queue without retaining the view controller",
             failures)
     require("func removeExistingFerryAnnotations()" in map_controller and
             "filter { $0 is CustomPointAnnotation }" in map_controller and
@@ -316,6 +331,11 @@ def main():
             "posix schedule time parsing" in security.lower(),
             "docs must describe POSIX schedule time parsing",
             failures)
+    require("main-thread ui updates" in readme.lower() and
+            "main-thread ui updates" in vision.lower() and
+            "main-thread ui updates" in security.lower(),
+            "docs must describe main-thread UI update handling",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -340,6 +360,9 @@ def main():
             failures)
     require("posix schedule time parsing" in changes.lower(),
             "CHANGES must record POSIX schedule time parsing",
+            failures)
+    require("main-thread ui updates" in changes.lower(),
+            "CHANGES must record main-thread UI update handling",
             failures)
     require("make lint" in changes and "make test" in changes and "make build" in changes,
             "CHANGES must record the standard local gate aliases",
@@ -367,6 +390,9 @@ def main():
             failures)
     require("status: completed" in schedule_time_plan,
             "POSIX schedule time parsing plan must be marked completed",
+            failures)
+    require("status: completed" in main_thread_plan,
+            "main-thread UI updates plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

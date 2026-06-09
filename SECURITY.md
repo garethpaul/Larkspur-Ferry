@@ -29,6 +29,7 @@ Helpful reports include:
 - Deterministic query parameter encoding should run after percent encoding so request construction is stable during review.
 - Locale-independent coordinate parsing should handle ferry API latitude and longitude strings consistently across device regions.
 - POSIX schedule time parsing should handle fixed-format ferry API departure strings consistently across device regions.
+- Main-thread UI updates should be preserved for schedule table and MapKit callbacks so asynchronous API completions do not mutate UIKit or MapKit state off the main queue.
 - The initial direction lookup should remain a single-shot location flow that stops CoreLocation updates before falling back to schedule loading.
 - The map refresh timer should be tied to the map screen lifecycle so ferry-location polling stops when the map view disappears.
 - Ferry annotation refresh should remove stale ferry pins without clearing unrelated map annotations.

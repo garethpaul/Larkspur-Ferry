@@ -65,10 +65,12 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - API request parameters use deterministic query ordering after percent encoding.
 - Ferry API latitude and longitude strings use locale-independent coordinate parsing.
 - Schedule table times use POSIX schedule time parsing for fixed-format ferry API values.
+- Schedule table and map API callbacks use main-thread UI updates before
+  mutating UIKit or MapKit state.
 
 ## Testing and Verification
 
-- `make lint`, `make test`, `make build`, and `make check` run `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, locale-independent coordinate parsing, POSIX schedule time parsing, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, and generated metadata ignores.
+- `make lint`, `make test`, `make build`, and `make check` run `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, locale-independent coordinate parsing, POSIX schedule time parsing, main-thread UI updates, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, and generated metadata ignores.
 - The `lint`, `test`, and `build` targets intentionally alias the existing
   check path so the standard local gate commands stay available while preserving
   the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
@@ -97,6 +99,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.
+- See `docs/plans/2026-06-09-main-thread-ui-updates.md` for schedule and map UI callback handling.
 
 ## Contributing
 

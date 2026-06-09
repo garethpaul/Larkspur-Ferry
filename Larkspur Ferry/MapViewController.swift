@@ -46,20 +46,29 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     func getLocation() {
         removeExistingFerryAnnotations()
 
-        API.sharedInstance.getLocation(completion: { (location) -> Void in
+        API.sharedInstance.getLocation(completion: { [weak self] (location) -> Void in
             guard let location = location else {
                 return
             }
 
-            self.initialLocation = location
-            self.centerMapOnLocation(self.initialLocation)
-            let info1 = CustomPointAnnotation()
-            info1.coordinate = CLLocationCoordinate2DMake(self.initialLocation.coordinate.latitude, self.initialLocation.coordinate.longitude)
+            DispatchQueue.main.async {
+                guard let viewController = self else {
+                    return
+                }
 
-            info1.title = "Larkspur Ferry"
-            info1.subtitle = ""
-            info1.imageName = "boatLogo"
-            self.mapView.addAnnotation(info1)
+                viewController.initialLocation = location
+                viewController.centerMapOnLocation(viewController.initialLocation)
+                let info1 = CustomPointAnnotation()
+                info1.coordinate = CLLocationCoordinate2DMake(
+                    viewController.initialLocation.coordinate.latitude,
+                    viewController.initialLocation.coordinate.longitude
+                )
+
+                info1.title = "Larkspur Ferry"
+                info1.subtitle = ""
+                info1.imageName = "boatLogo"
+                viewController.mapView.addAnnotation(info1)
+            }
         })
     }
 
