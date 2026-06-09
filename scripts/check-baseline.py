@@ -235,7 +235,7 @@ def main():
             "mapView.removeAnnotations(ferryAnnotations)" in map_controller,
             "map flow must remove existing ferry annotations without clearing unrelated annotations",
             failures)
-    require("removeExistingFerryAnnotations()" in map_controller and "if self.mapView.annotations.count == 1" not in map_controller,
+    require(map_controller.count("removeExistingFerryAnnotations()") >= 2 and "if self.mapView.annotations.count == 1" not in map_controller,
             "map flow must refresh ferry annotations without relying on the total annotation count",
             failures)
     require("var locationRefreshTimer: Timer?" in map_controller and "func startLocationRefreshTimer()" in map_controller,
