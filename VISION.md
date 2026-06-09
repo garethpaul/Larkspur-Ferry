@@ -26,6 +26,7 @@ Priority:
 - Keep malformed API payloads and unavailable location data from crashing the app
 - Keep initial direction lookup as a single-shot location flow with schedule fallback
 - Keep the map refresh timer tied to the map screen lifecycle
+- Keep ferry annotation refresh targeted to stale ferry pins
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
 

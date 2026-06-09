@@ -5,6 +5,7 @@
 - Fixed `build.sh` to use POSIX shell function syntax and skip cleanly when CocoaPods or Xcode are unavailable.
 - Hardened API parsing for ferry location and schedule responses to remove force-unwrapping of malformed data.
 - Tied the map refresh timer to the map screen lifecycle so ferry-location polling stops when the view disappears.
+- Hardened ferry annotation refresh so stale ferry pins are removed without clearing unrelated map annotations.
 - Made the initial direction lookup a single-shot location flow so unavailable CoreLocation or geocoder data falls back without repeated schedule reloads.
 - Removed app debug logging from location and network failure paths.
 - Made location fallback behavior show ferry times when authorization, geocoding, or location updates are unavailable.

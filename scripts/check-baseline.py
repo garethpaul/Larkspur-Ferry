@@ -84,6 +84,7 @@ def main():
         "build.sh",
         "docs/plans/2026-06-08-larkspur-ferry-baseline.md",
         "docs/plans/2026-06-08-location-update-single-shot.md",
+        "docs/plans/2026-06-08-map-annotation-refresh.md",
         "docs/plans/2026-06-08-map-refresh-timer-lifecycle.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
@@ -160,6 +161,8 @@ def main():
     plan = PLAN.read_text(encoding="utf-8") if PLAN.exists() else ""
     timer_plan = read("docs/plans/2026-06-08-map-refresh-timer-lifecycle.md")
     location_plan = read("docs/plans/2026-06-08-location-update-single-shot.md")
+    annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
+    annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
 
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     require(shell_result.returncode == 0,
@@ -227,6 +230,14 @@ def main():
     require("guard let location = location" in map_controller and "as? CustomPointAnnotation" in map_controller,
             "map flow must guard missing API location and annotation casts",
             failures)
+    require("func removeExistingFerryAnnotations()" in map_controller and
+            "filter { $0 is CustomPointAnnotation }" in map_controller and
+            "mapView.removeAnnotations(ferryAnnotations)" in map_controller,
+            "map flow must remove existing ferry annotations without clearing unrelated annotations",
+            failures)
+    require("removeExistingFerryAnnotations()" in map_controller and "if self.mapView.annotations.count == 1" not in map_controller,
+            "map flow must refresh ferry annotations without relying on the total annotation count",
+            failures)
     require("var locationRefreshTimer: Timer?" in map_controller and "func startLocationRefreshTimer()" in map_controller,
             "map flow must keep the ferry-location refresh timer visible and restartable",
             failures)
@@ -263,6 +274,11 @@ def main():
     require("map refresh timer" in readme and "map refresh timer" in vision and "map refresh timer" in security,
             "docs must describe map refresh timer lifecycle handling",
             failures)
+    require("ferry annotation refresh" in readme.lower() and
+            "ferry annotation refresh" in vision.lower() and
+            "ferry annotation refresh" in security.lower(),
+            "docs must describe ferry annotation refresh handling",
+            failures)
     require("single-shot location" in readme and "single-shot location" in vision and "single-shot location" in security,
             "docs must describe single-shot location lookup handling",
             failures)
@@ -278,6 +294,9 @@ def main():
     require("build.sh" in changes and "force-unwrapping" in changes and ".DS_Store" in changes and "map refresh timer" in changes and "single-shot location" in changes,
             "CHANGES must record build, force unwrap, generated metadata, timer lifecycle, and location lookup hardening",
             failures)
+    require("ferry annotation refresh" in changes,
+            "CHANGES must record ferry annotation refresh hardening",
+            failures)
     require("status: completed" in plan,
             "plan must be marked completed",
             failures)
@@ -286,6 +305,9 @@ def main():
             failures)
     require("status: completed" in location_plan,
             "location update single-shot plan must be marked completed",
+            failures)
+    require("status: completed" in annotation_plan,
+            "map annotation refresh plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

@@ -44,10 +44,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
 
     func getLocation() {
-        // remove locations if they exist
-        if self.mapView.annotations.count == 1 {
-            self.mapView.removeAnnotations(self.mapView.annotations)
-        }
+        removeExistingFerryAnnotations()
 
         API.sharedInstance.getLocation(completion: { (location) -> Void in
             guard let location = location else {
@@ -64,6 +61,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             info1.imageName = "boatLogo"
             self.mapView.addAnnotation(info1)
         })
+    }
+
+    func removeExistingFerryAnnotations() {
+        let ferryAnnotations = mapView.annotations.filter { $0 is CustomPointAnnotation }
+        mapView.removeAnnotations(ferryAnnotations)
     }
 
     func centerMapOnLocation(_ location: CLLocation) {
