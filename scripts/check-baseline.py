@@ -95,6 +95,7 @@ def main():
         "docs/plans/2026-06-09-main-thread-ui-updates.md",
         "docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md",
         "docs/plans/2026-06-10-hosted-project-validation.md",
+        "docs/plans/2026-06-10-validated-ferry-responses.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -177,6 +178,7 @@ def main():
     main_thread_plan = MAIN_THREAD_PLAN.read_text(encoding="utf-8") if MAIN_THREAD_PLAN.exists() else ""
     map_failure_plan = read("docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md")
     hosted_validation_plan = read("docs/plans/2026-06-10-hosted-project-validation.md")
+    validated_response_plan = read("docs/plans/2026-06-10-validated-ferry-responses.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -226,6 +228,16 @@ def main():
             failures)
     require("parameters?.stringFromHttpParameters() ?? \"\"" in api and "guard let url = URL" in api,
             "API request builder must avoid force-unwrapping parameters and URLs",
+            failures)
+    require("private let requestTimeout: TimeInterval = 10" in api and
+            "urlRequest.cachePolicy = .reloadIgnoringLocalCacheData" in api and
+            "urlRequest.timeoutInterval = requestTimeout" in api,
+            "API requests must use a bounded timeout and bypass stale cached ferry data",
+            failures)
+    require(".validate(statusCode: 200..<300)" in api and
+            '.validate(contentType: ["application/json"])' in api and
+            api.find(".validate(statusCode: 200..<300)") < api.find(".responseJSON"),
+            "API responses must validate successful status and JSON content before parsing",
             failures)
     require("print(" not in strip_swift_line_comments(api),
             "API source must not print network failures",
@@ -420,6 +432,9 @@ def main():
             failures)
     require("status: completed" in hosted_validation_plan and "SKIP_XCODE_BUILD=1" in hosted_validation_plan,
             "hosted project validation plan must be marked completed",
+            failures)
+    require("status: completed" in validated_response_plan and "10-second" in validated_response_plan,
+            "validated ferry response plan must be marked completed",
             failures)
     require("permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
             "runs-on: macos-15" in workflow and "timeout-minutes: 10" in workflow and

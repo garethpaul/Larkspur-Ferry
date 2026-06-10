@@ -26,6 +26,8 @@ Helpful reports include:
 
 - This repository appears to be an Apple platform application or Swift sample. The active security scope is the code and documentation on the default branch.
 - The app uses an HTTPS ferry API endpoint and CoreLocation for in-app direction assistance. API and location failures should fall back without force-unwrapping or app debug logging.
+- Live ferry requests should bypass cached responses, use a 10-second timeout,
+  and validate HTTP success plus `application/json` before parsing.
 - Deterministic query parameter encoding should run after percent encoding so request construction is stable during review.
 - Locale-independent coordinate parsing should handle ferry API latitude and longitude strings consistently across device regions.
 - POSIX schedule time parsing should handle fixed-format ferry API departure strings consistently across device regions.

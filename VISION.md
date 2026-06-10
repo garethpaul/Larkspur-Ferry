@@ -24,6 +24,7 @@ Priority:
 
 - Preserve ferry schedule and map-location flows
 - Keep API endpoint behavior visible and documented
+- Validate successful JSON ferry responses with a 10-second uncached request
 - Keep API request construction on deterministic query parameter ordering
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
 - Keep POSIX schedule time parsing for fixed-format ferry API departure values

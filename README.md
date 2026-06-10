@@ -67,6 +67,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - API request parameters use deterministic query ordering after percent encoding.
 - Ferry API latitude and longitude strings use locale-independent coordinate parsing.
 - Schedule table times use POSIX schedule time parsing for fixed-format ferry API values.
+- Live ferry requests bypass cached data, time out after 10 seconds, and accept
+  only successful `application/json` responses before parsing.
 - Schedule table and map API callbacks use main-thread UI updates before
   mutating UIKit or MapKit state.
 
