@@ -15,7 +15,8 @@ The goal is to keep the app useful, verifiable, and clear about its data source.
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
 `scripts/check-baseline.py` and the guarded `build.sh` path to verify the build
 script, CocoaPods metadata, Swift API parsing, single-shot location fallbacks,
-storyboards, plists, assets, generated metadata ignores, and documentation.
+storyboards, plists, assets, failed map-location refresh handling, generated
+metadata ignores, and documentation.
 
 The current focus is:
 
@@ -31,6 +32,7 @@ Priority:
 - Keep initial direction lookup as a single-shot location flow with schedule fallback
 - Keep the map refresh timer tied to the map screen lifecycle
 - Keep ferry annotation refresh targeted to stale ferry pins
+- Keep failed map-location refresh responses from clearing the last known ferry pin
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
 - Maintain screenshot, build script, and UI test context

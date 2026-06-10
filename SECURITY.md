@@ -33,6 +33,8 @@ Helpful reports include:
 - The initial direction lookup should remain a single-shot location flow that stops CoreLocation updates before falling back to schedule loading.
 - The map refresh timer should be tied to the map screen lifecycle so ferry-location polling stops when the map view disappears.
 - Ferry annotation refresh should remove stale ferry pins without clearing unrelated map annotations.
+- Failed map-location refresh responses should preserve the last known ferry
+  pin until a successful refresh can replace it.
 - Run `make check` after changing Swift sources, build scripts, Podfile metadata, plists, storyboards, assets, generated-output ignores, or security documentation.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.

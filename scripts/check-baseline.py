@@ -92,6 +92,7 @@ def main():
         "docs/plans/2026-06-09-make-gate-aliases.md",
         "docs/plans/2026-06-09-posix-schedule-time-parsing.md",
         "docs/plans/2026-06-09-main-thread-ui-updates.md",
+        "docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -172,6 +173,7 @@ def main():
     make_gates_plan = read("docs/plans/2026-06-09-make-gate-aliases.md")
     schedule_time_plan = read("docs/plans/2026-06-09-posix-schedule-time-parsing.md")
     main_thread_plan = MAIN_THREAD_PLAN.read_text(encoding="utf-8") if MAIN_THREAD_PLAN.exists() else ""
+    map_failure_plan = read("docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
 
@@ -271,6 +273,10 @@ def main():
     require(map_controller.count("removeExistingFerryAnnotations()") >= 2 and "if self.mapView.annotations.count == 1" not in map_controller,
             "map flow must refresh ferry annotations without relying on the total annotation count",
             failures)
+    require("func getLocation() {\n        API.sharedInstance.getLocation" in map_controller and
+            "viewController.removeExistingFerryAnnotations()" in map_controller,
+            "map flow must preserve the last ferry annotation until a successful refresh replaces it",
+            failures)
     require("var locationRefreshTimer: Timer?" in map_controller and "func startLocationRefreshTimer()" in map_controller,
             "map flow must keep the ferry-location refresh timer visible and restartable",
             failures)
@@ -336,6 +342,11 @@ def main():
             "main-thread ui updates" in security.lower(),
             "docs must describe main-thread UI update handling",
             failures)
+    require("failed map-location refresh" in readme.lower() and
+            "failed map-location refresh" in vision.lower() and
+            "failed map-location refresh" in security.lower(),
+            "docs must describe failed map-location refresh handling",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -363,6 +374,9 @@ def main():
             failures)
     require("main-thread ui updates" in changes.lower(),
             "CHANGES must record main-thread UI update handling",
+            failures)
+    require("failed map-location refresh" in changes.lower(),
+            "CHANGES must record failed map-location refresh handling",
             failures)
     require("make lint" in changes and "make test" in changes and "make build" in changes,
             "CHANGES must record the standard local gate aliases",
@@ -393,6 +407,9 @@ def main():
             failures)
     require("status: completed" in main_thread_plan,
             "main-thread UI updates plan must be marked completed",
+            failures)
+    require("status: completed" in map_failure_plan,
+            "map refresh failure plan must be marked completed",
             failures)
 
     if shutil.which("xcodebuild"):

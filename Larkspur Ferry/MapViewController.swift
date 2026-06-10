@@ -44,8 +44,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
 
     func getLocation() {
-        removeExistingFerryAnnotations()
-
         API.sharedInstance.getLocation(completion: { [weak self] (location) -> Void in
             guard let location = location else {
                 return
@@ -56,6 +54,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     return
                 }
 
+                viewController.removeExistingFerryAnnotations()
                 viewController.initialLocation = location
                 viewController.centerMapOnLocation(viewController.initialLocation)
                 let info1 = CustomPointAnnotation()

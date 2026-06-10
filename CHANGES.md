@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-10
+
+- Preserved the last known ferry pin during failed map-location refresh
+  responses until a successful refresh can replace it.
+
 ## 2026-06-09
 
 - Added local `make lint`, `make test`, and `make build` gate aliases for the
