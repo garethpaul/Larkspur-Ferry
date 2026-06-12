@@ -36,8 +36,9 @@ Priority:
 - Keep failed map-location refresh responses from clearing the last known ferry pin
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
-- Keep hosted project validation pinned and read-only on macOS through
-  structural project parsing and the explicit `SKIP_XCODE_BUILD=1` boundary
+- Keep hosted project validation pinned, credential-free, and read-only on
+  macOS through structural project parsing and the explicit
+  `SKIP_XCODE_BUILD=1` boundary
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
 
