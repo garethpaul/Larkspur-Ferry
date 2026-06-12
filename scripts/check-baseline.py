@@ -97,6 +97,7 @@ def main():
         "docs/plans/2026-06-10-hosted-project-validation.md",
         "docs/plans/2026-06-10-validated-ferry-responses.md",
         "docs/plans/2026-06-12-stale-schedule-response-guard.md",
+        "docs/plans/2026-06-12-checkout-credential-boundary.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -181,6 +182,7 @@ def main():
     hosted_validation_plan = read("docs/plans/2026-06-10-hosted-project-validation.md")
     validated_response_plan = read("docs/plans/2026-06-10-validated-ferry-responses.md")
     stale_schedule_plan = read("docs/plans/2026-06-12-stale-schedule-response-guard.md")
+    checkout_credential_plan = read("docs/plans/2026-06-12-checkout-credential-boundary.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -451,12 +453,41 @@ def main():
     require("status: completed" in stale_schedule_plan and "hostile mutations" in stale_schedule_plan,
             "stale schedule response plan must record completed verification",
             failures)
-    require("permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
+    require("status: completed" in checkout_credential_plan and
+            "persist-credentials: false" in checkout_credential_plan and
+            "hostile mutations rejected" in checkout_credential_plan,
+            "checkout credential plan must record completed verification",
+            failures)
+    workflow_files = sorted(
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / ".github/workflows").iterdir()
+        if path.is_file()
+    )
+    actions = re.findall(r"(?m)^\s*(?:-\s*)?uses:\s*(\S+)(?:\s+#.*)?$", workflow)
+    checkout_step = re.search(
+        r"(?m)^      - name: Check out repository\n"
+        r"        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10\n"
+        r"        with:\n"
+        r"          persist-credentials: false\n",
+        workflow,
+    )
+    require(workflow_files == [".github/workflows/check.yml"],
+            "workflow inventory must contain only .github/workflows/check.yml",
+            failures)
+    require(checkout_step is not None and
+            actions == ["actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"] and
+            workflow.count("persist-credentials:") == 1 and
+            "persist-credentials: true" not in workflow and
+            "permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
             "runs-on: macos-15" in workflow and "timeout-minutes: 10" in workflow and
             'SKIP_XCODE_BUILD: "1"' in workflow and
             "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
             "run: make check" in workflow,
-            "Check workflow must stay pinned, read-only, bounded, and structural-only",
+            "Check workflow must use one pinned credential-free checkout and stay read-only, bounded, and structural-only",
+            failures)
+    guidance = " ".join("\n".join([read("README.md"), read("SECURITY.md"), read("VISION.md"), read("CHANGES.md")]).split()).lower()
+    require("checkout credentials are not persisted" in guidance and "credential-free checkout" in guidance,
+            "repository guidance must document the credential-free checkout boundary",
             failures)
 
     if shutil.which("xcodebuild"):
