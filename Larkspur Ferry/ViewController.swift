@@ -128,9 +128,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Get the Boats from the API and then reload the table
     func getBoats() {
         // Get the times for the ferry
-        API.sharedInstance.getTimes(from: f) { [weak self] (boats) -> Void in
+        let requestedFrom = f
+        API.sharedInstance.getTimes(from: requestedFrom) { [weak self] (boats) -> Void in
             DispatchQueue.main.async {
-                guard let viewController = self else {
+                guard let viewController = self,
+                    viewController.f == requestedFrom else {
                     return
                 }
 

@@ -29,6 +29,7 @@ Priority:
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
 - Keep POSIX schedule time parsing for fixed-format ferry API departure values
 - Keep main-thread UI updates for schedule table and map API callbacks
+- Reject a stale schedule response after the user selects a newer direction
 - Keep malformed API payloads and unavailable location data from crashing the app
 - Keep initial direction lookup as a single-shot location flow with schedule fallback
 - Keep the map refresh timer tied to the map screen lifecycle

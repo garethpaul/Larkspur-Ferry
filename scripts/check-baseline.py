@@ -96,6 +96,7 @@ def main():
         "docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md",
         "docs/plans/2026-06-10-hosted-project-validation.md",
         "docs/plans/2026-06-10-validated-ferry-responses.md",
+        "docs/plans/2026-06-12-stale-schedule-response-guard.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -179,6 +180,7 @@ def main():
     map_failure_plan = read("docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md")
     hosted_validation_plan = read("docs/plans/2026-06-10-hosted-project-validation.md")
     validated_response_plan = read("docs/plans/2026-06-10-validated-ferry-responses.md")
+    stale_schedule_plan = read("docs/plans/2026-06-12-stale-schedule-response-guard.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -254,11 +256,13 @@ def main():
     require("guard indexPath.row < self.items.count" in view_controller and "date.map" in view_controller,
             "table rendering must guard indexes, cell casts, and invalid ferry times",
             failures)
-    require("API.sharedInstance.getTimes(from: f) { [weak self]" in view_controller and
+    require("let requestedFrom = f" in view_controller and
+            "API.sharedInstance.getTimes(from: requestedFrom) { [weak self]" in view_controller and
             "DispatchQueue.main.async" in view_controller and
-            "guard let viewController = self else" in view_controller and
+            "guard let viewController = self," in view_controller and
+            "viewController.f == requestedFrom else" in view_controller and
             "viewController.tableView.reloadData()" in view_controller,
-            "schedule API callback must update table state on the main queue without retaining the view controller",
+            "schedule API callback must reject stale directions and update table state on the main queue without retaining the view controller",
             failures)
     require('dateFormatter.locale = Locale(identifier: "en_US_POSIX")' in view_controller,
             "schedule time parsing must use a POSIX locale for fixed-format API times",
@@ -361,6 +365,11 @@ def main():
             "main-thread ui updates" in security.lower(),
             "docs must describe main-thread UI update handling",
             failures)
+    require("stale schedule response" in readme.lower() and
+            "stale schedule response" in vision.lower() and
+            "stale schedule response" in security.lower(),
+            "docs must describe stale schedule response rejection",
+            failures)
     require("failed map-location refresh" in readme.lower() and
             "failed map-location refresh" in vision.lower() and
             "failed map-location refresh" in security.lower(),
@@ -393,6 +402,9 @@ def main():
             failures)
     require("main-thread ui updates" in changes.lower(),
             "CHANGES must record main-thread UI update handling",
+            failures)
+    require("stale schedule response" in changes.lower(),
+            "CHANGES must record stale schedule response rejection",
             failures)
     require("failed map-location refresh" in changes.lower(),
             "CHANGES must record failed map-location refresh handling",
@@ -435,6 +447,9 @@ def main():
             failures)
     require("status: completed" in validated_response_plan and "10-second" in validated_response_plan,
             "validated ferry response plan must be marked completed",
+            failures)
+    require("status: completed" in stale_schedule_plan and "hostile mutations" in stale_schedule_plan,
+            "stale schedule response plan must record completed verification",
             failures)
     require("permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
             "runs-on: macos-15" in workflow and "timeout-minutes: 10" in workflow and

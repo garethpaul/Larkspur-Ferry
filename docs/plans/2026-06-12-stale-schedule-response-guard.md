@@ -1,6 +1,6 @@
 # Stale Schedule Response Guard
 
-status: planned
+status: completed
 
 ## Context
 
