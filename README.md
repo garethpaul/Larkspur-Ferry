@@ -80,11 +80,12 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - The `lint`, `test`, and `build` targets intentionally alias the existing
   check path so the standard local gate commands stay available while preserving
   the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
-- Pinned `macos-15` GitHub Actions runs `make check` with
+- Pinned, credential-free `macos-15` GitHub Actions runs `make check` with
   `SKIP_XCODE_BUILD=1` and parses `Larkspur Ferry.xcodeproj` using
   `xcodebuild -list`. This hosted validation does not install pods, call the
   ferry API, request location, build or sign the app, run a simulator, or
-  execute UI tests.
+  execute UI tests. Checkout credentials are not persisted after source
+  retrieval.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

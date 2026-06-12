@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-12
+
+- Disabled persisted checkout credentials and enforced the sole pinned
+  credential-free workflow boundary without changing stale-response handling.
+
 ## 2026-06-10
 
 - Rejected a stale schedule response when a newer ferry direction selection is
