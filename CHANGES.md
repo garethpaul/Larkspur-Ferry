@@ -2,6 +2,8 @@
 
 ## 2026-06-10
 
+- Rejected a stale schedule response when a newer ferry direction selection is
+  already active.
 - Added uncached 10-second ferry requests with HTTP status and JSON content-type
   validation before response parsing.
 - Added pinned, read-only macOS hosted project validation with an explicit

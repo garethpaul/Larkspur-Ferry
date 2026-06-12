@@ -71,10 +71,12 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   only successful `application/json` responses before parsing.
 - Schedule table and map API callbacks use main-thread UI updates before
   mutating UIKit or MapKit state.
+- A stale schedule response is ignored after the user selects the opposite
+  ferry direction.
 
 ## Testing and Verification
 
-- `make lint`, `make test`, `make build`, and `make check` run `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, locale-independent coordinate parsing, POSIX schedule time parsing, main-thread UI updates, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, failed map-location refresh handling, and generated metadata ignores.
+- `make lint`, `make test`, `make build`, and `make check` run `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, locale-independent coordinate parsing, POSIX schedule time parsing, main-thread UI updates, stale schedule response rejection, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, failed map-location refresh handling, and generated metadata ignores.
 - The `lint`, `test`, and `build` targets intentionally alias the existing
   check path so the standard local gate commands stay available while preserving
   the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
