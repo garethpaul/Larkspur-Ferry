@@ -38,9 +38,10 @@ Helpful reports include:
 - Failed map-location refresh responses should preserve the last known ferry
   pin until a successful refresh can replace it.
 - Run `make check` after changing Swift sources, build scripts, Podfile metadata, plists, storyboards, assets, generated-output ignores, or security documentation.
-- The pinned macOS workflow uses `SKIP_XCODE_BUILD=1` and only parses project
-  metadata; it does not install pods, call the ferry API, request location,
-  build or sign the app, run a simulator, or execute UI tests.
+- The pinned macOS workflow disables checkout credential persistence, uses
+  read-only permissions, and sets `SKIP_XCODE_BUILD=1` to parse project metadata
+  only; it does not install pods, call the ferry API, request location, build or
+  sign the app, run a simulator, or execute UI tests.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.

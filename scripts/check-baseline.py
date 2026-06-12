@@ -75,6 +75,7 @@ def main():
     required_files = [
         ".gitignore",
         ".github/workflows/check.yml",
+        "AGENTS.md",
         ".travis.yml",
         "CHANGES.md",
         "Makefile",
@@ -163,6 +164,7 @@ def main():
     vision = read("VISION.md")
     security = read("SECURITY.md")
     changes = read("CHANGES.md")
+    agents = read("AGENTS.md")
     makefile = read("Makefile")
     overview = read("docs/readme-overview.svg")
     gitignore = read(".gitignore")
@@ -376,6 +378,12 @@ def main():
     require("make check" in security and "location" in security.lower() and "API" in security,
             "SECURITY must document location/API static guardrails",
             failures)
+    require("pod install" in agents and "Larkspur Ferry.xcworkspace" in agents and
+            "make lint" in agents and "make test" in agents and "make build" in agents and
+            "make check" in agents and "force-unwrapped API payloads" in agents and
+            "location data" in agents,
+            "AGENTS.md must preserve CocoaPods, verification, API, and location guardrails",
+            failures)
     require("build.sh" in changes and "force-unwrapping" in changes and ".DS_Store" in changes and "map refresh timer" in changes and "single-shot location" in changes,
             "CHANGES must record build, force unwrap, generated metadata, timer lifecycle, and location lookup hardening",
             failures)
@@ -436,12 +444,25 @@ def main():
     require("status: completed" in validated_response_plan and "10-second" in validated_response_plan,
             "validated ferry response plan must be marked completed",
             failures)
-    require("permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
+    actions = re.findall(r"(?m)^\s*(?:-\s*)?uses:\s*(\S+)(?:\s+#.*)?$", workflow)
+    checkout_step = re.search(
+        r"(?m)^      - name: Check out repository\n"
+        r"        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10\n"
+        r"        with:\n"
+        r"          persist-credentials: false\n",
+        workflow,
+    )
+    require(checkout_step is not None and
+            actions == ["actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"] and
+            workflow.count("permissions:") == 1 and
+            workflow.count("persist-credentials:") == 1 and
+            re.search(r"(?m)^\s+[A-Za-z-]+:\s+write\s*$", workflow) is None and
+            "permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
             "runs-on: macos-15" in workflow and "timeout-minutes: 10" in workflow and
             'SKIP_XCODE_BUILD: "1"' in workflow and
             "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
             "run: make check" in workflow,
-            "Check workflow must stay pinned, read-only, bounded, and structural-only",
+            "Check workflow must use only pinned, credential-free checkout with singular read-only permissions and bounded structural validation",
             failures)
 
     if shutil.which("xcodebuild"):
