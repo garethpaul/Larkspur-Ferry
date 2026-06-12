@@ -2,6 +2,10 @@
 
 ## 2026-06-10
 
+- Added uncached 10-second ferry requests with HTTP status and JSON content-type
+  validation before response parsing.
+- Added pinned, read-only macOS hosted project validation with an explicit
+  `SKIP_XCODE_BUILD=1` boundary around obsolete CocoaPods and simulator work.
 - Preserved the last known ferry pin during failed map-location refresh
   responses until a successful refresh can replace it.
 

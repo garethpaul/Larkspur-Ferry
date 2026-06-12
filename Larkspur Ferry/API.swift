@@ -17,6 +17,7 @@ private typealias JSONObject = NSDictionary
 final class API {
     static let sharedInstance = API()
     private let apiBaseURL = "https://requestlabs.appspot.com/"
+    private let requestTimeout: TimeInterval = 10
     
     // MARK: Helper for Ferry
     // Get the location of the ferry
@@ -96,16 +97,21 @@ final class API {
 
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "GET"
+        urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
+        urlRequest.timeoutInterval = requestTimeout
 
-        Alamofire.request(urlRequest).responseJSON { (response) -> Void in
-            let result = response.result
-            switch result {
-            case .success(let JSONEncoding):
-                completion(JSONEncoding as AnyObject?)
-            case .failure:
-                completion(nil)
+        Alamofire.request(urlRequest)
+            .validate(statusCode: 200..<300)
+            .validate(contentType: ["application/json"])
+            .responseJSON { (response) -> Void in
+                let result = response.result
+                switch result {
+                case .success(let JSONEncoding):
+                    completion(JSONEncoding as AnyObject?)
+                case .failure:
+                    completion(nil)
+                }
             }
-        }
     }
 }
     

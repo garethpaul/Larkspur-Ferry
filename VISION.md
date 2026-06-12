@@ -24,6 +24,7 @@ Priority:
 
 - Preserve ferry schedule and map-location flows
 - Keep API endpoint behavior visible and documented
+- Validate successful JSON ferry responses with a 10-second uncached request
 - Keep API request construction on deterministic query parameter ordering
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
 - Keep POSIX schedule time parsing for fixed-format ferry API departure values
@@ -35,6 +36,8 @@ Priority:
 - Keep failed map-location refresh responses from clearing the last known ferry pin
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
+- Keep hosted project validation pinned and read-only on macOS through
+  structural project parsing and the explicit `SKIP_XCODE_BUILD=1` boundary
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
 

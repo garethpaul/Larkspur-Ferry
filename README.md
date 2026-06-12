@@ -67,6 +67,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - API request parameters use deterministic query ordering after percent encoding.
 - Ferry API latitude and longitude strings use locale-independent coordinate parsing.
 - Schedule table times use POSIX schedule time parsing for fixed-format ferry API values.
+- Live ferry requests bypass cached data, time out after 10 seconds, and accept
+  only successful `application/json` responses before parsing.
 - Schedule table and map API callbacks use main-thread UI updates before
   mutating UIKit or MapKit state.
 
@@ -76,6 +78,11 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - The `lint`, `test`, and `build` targets intentionally alias the existing
   check path so the standard local gate commands stay available while preserving
   the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
+- Pinned `macos-15` GitHub Actions runs `make check` with
+  `SKIP_XCODE_BUILD=1` and parses `Larkspur Ferry.xcodeproj` using
+  `xcodebuild -list`. This hosted validation does not install pods, call the
+  ferry API, request location, build or sign the app, run a simulator, or
+  execute UI tests.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

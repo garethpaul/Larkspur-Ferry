@@ -74,6 +74,7 @@ def main():
     failures = []
     required_files = [
         ".gitignore",
+        ".github/workflows/check.yml",
         ".travis.yml",
         "CHANGES.md",
         "Makefile",
@@ -93,6 +94,8 @@ def main():
         "docs/plans/2026-06-09-posix-schedule-time-parsing.md",
         "docs/plans/2026-06-09-main-thread-ui-updates.md",
         "docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md",
+        "docs/plans/2026-06-10-hosted-project-validation.md",
+        "docs/plans/2026-06-10-validated-ferry-responses.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -174,6 +177,9 @@ def main():
     schedule_time_plan = read("docs/plans/2026-06-09-posix-schedule-time-parsing.md")
     main_thread_plan = MAIN_THREAD_PLAN.read_text(encoding="utf-8") if MAIN_THREAD_PLAN.exists() else ""
     map_failure_plan = read("docs/plans/2026-06-10-map-refresh-failure-preserves-pin.md")
+    hosted_validation_plan = read("docs/plans/2026-06-10-hosted-project-validation.md")
+    validated_response_plan = read("docs/plans/2026-06-10-validated-ferry-responses.md")
+    workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
 
@@ -186,6 +192,9 @@ def main():
             failures)
     require("command -v pod" in build_script and "command -v xcodebuild" in build_script and "skipping Xcode build" in build_script,
             "build.sh must skip cleanly when CocoaPods or Xcode are unavailable",
+            failures)
+    require('SKIP_XCODE_BUILD:-' in build_script and 'SKIP_XCODE_BUILD=1' in build_script,
+            "build.sh must support explicit hosted structural validation without a legacy build",
             failures)
     require(".PHONY: build check lint test" in makefile and "lint test build: check" in makefile and
             "./build.sh" in makefile,
@@ -219,6 +228,16 @@ def main():
             failures)
     require("parameters?.stringFromHttpParameters() ?? \"\"" in api and "guard let url = URL" in api,
             "API request builder must avoid force-unwrapping parameters and URLs",
+            failures)
+    require("private let requestTimeout: TimeInterval = 10" in api and
+            "urlRequest.cachePolicy = .reloadIgnoringLocalCacheData" in api and
+            "urlRequest.timeoutInterval = requestTimeout" in api,
+            "API requests must use a bounded timeout and bypass stale cached ferry data",
+            failures)
+    require(".validate(statusCode: 200..<300)" in api and
+            '.validate(contentType: ["application/json"])' in api and
+            api.find(".validate(statusCode: 200..<300)") < api.find(".responseJSON"),
+            "API responses must validate successful status and JSON content before parsing",
             failures)
     require("print(" not in strip_swift_line_comments(api),
             "API source must not print network failures",
@@ -411,9 +430,30 @@ def main():
     require("status: completed" in map_failure_plan,
             "map refresh failure plan must be marked completed",
             failures)
+    require("status: completed" in hosted_validation_plan and "SKIP_XCODE_BUILD=1" in hosted_validation_plan,
+            "hosted project validation plan must be marked completed",
+            failures)
+    require("status: completed" in validated_response_plan and "10-second" in validated_response_plan,
+            "validated ferry response plan must be marked completed",
+            failures)
+    require("permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
+            "runs-on: macos-15" in workflow and "timeout-minutes: 10" in workflow and
+            'SKIP_XCODE_BUILD: "1"' in workflow and
+            "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
+            "run: make check" in workflow,
+            "Check workflow must stay pinned, read-only, bounded, and structural-only",
+            failures)
 
     if shutil.which("xcodebuild"):
-        print("xcodebuild is available; run ./build.sh or Xcode UI tests on macOS before release.")
+        result = subprocess.run(
+            ["xcodebuild", "-list", "-project", "Larkspur Ferry.xcodeproj"],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        require(result.returncode == 0,
+                "xcodebuild could not parse Larkspur Ferry.xcodeproj: " + result.stderr.strip(), failures)
     else:
         print("xcodebuild unavailable; static iOS baseline only.")
 

@@ -26,6 +26,11 @@ ci_test() {
 }
 
 
+if [ "${SKIP_XCODE_BUILD:-}" = "1" ]; then
+    echo "SKIP_XCODE_BUILD=1; skipping legacy CocoaPods and simulator build."
+    exit 0
+fi
+
 if ! command -v pod >/dev/null 2>&1 || ! command -v xcodebuild >/dev/null 2>&1; then
     echo "pod or xcodebuild unavailable; skipping Xcode build on this host."
     exit 0
