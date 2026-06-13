@@ -13,6 +13,16 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs/plans/2026-06-08-larkspur-ferry-baseline.md"
 MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-09-main-thread-ui-updates.md"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+EXPECTED_MAKEFILE = """ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+.PHONY: build check lint test
+
+lint test build: check
+
+check:
+\tpython3 "$(ROOT)/scripts/check-baseline.py"
+\tcd "$(ROOT)" && ./build.sh
+"""
 
 
 def require(condition, message, failures):
@@ -98,6 +108,7 @@ def main():
         "docs/plans/2026-06-10-validated-ferry-responses.md",
         "docs/plans/2026-06-12-stale-schedule-response-guard.md",
         "docs/plans/2026-06-12-checkout-credential-boundary.md",
+        "docs/plans/2026-06-13-location-independent-make.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -183,6 +194,7 @@ def main():
     validated_response_plan = read("docs/plans/2026-06-10-validated-ferry-responses.md")
     stale_schedule_plan = read("docs/plans/2026-06-12-stale-schedule-response-guard.md")
     checkout_credential_plan = read("docs/plans/2026-06-12-checkout-credential-boundary.md")
+    location_independent_make_plan = read("docs/plans/2026-06-13-location-independent-make.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -200,9 +212,8 @@ def main():
     require('SKIP_XCODE_BUILD:-' in build_script and 'SKIP_XCODE_BUILD=1' in build_script,
             "build.sh must support explicit hosted structural validation without a legacy build",
             failures)
-    require(".PHONY: build check lint test" in makefile and "lint test build: check" in makefile and
-            "./build.sh" in makefile,
-            "Makefile must expose standard gates that invoke the guarded build script",
+    require(makefile == EXPECTED_MAKEFILE,
+            "Makefile must exactly preserve rooted standard gates and the guarded build script",
             failures)
 
     require(app_plist.get("NSLocationWhenInUseUsageDescription"),
@@ -414,6 +425,9 @@ def main():
     require("make lint" in changes and "make test" in changes and "make build" in changes,
             "CHANGES must record the standard local gate aliases",
             failures)
+    require("make -f /path/to/Larkspur-Ferry/Makefile check" in readme,
+            "README must document location-independent Makefile invocation",
+            failures)
     require("status: completed" in plan,
             "plan must be marked completed",
             failures)
@@ -457,6 +471,11 @@ def main():
             "persist-credentials: false" in checkout_credential_plan and
             "hostile mutations rejected" in checkout_credential_plan,
             "checkout credential plan must record completed verification",
+            failures)
+    require("status: completed" in location_independent_make_plan and
+            "root and external-directory" in location_independent_make_plan and
+            "six isolated hostile mutations" in location_independent_make_plan,
+            "location-independent Make plan must record completed root, external, and mutation verification",
             failures)
     workflow_files = sorted(
         path.relative_to(ROOT).as_posix()

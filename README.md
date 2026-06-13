@@ -77,6 +77,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - `make lint`, `make test`, `make build`, and `make check` run `scripts/check-baseline.py` and the guarded `build.sh` path. The checker verifies build-script syntax, plist/storyboard/asset parsing, Podfile lock metadata, API parsing guardrails, deterministic query parameter encoding, locale-independent coordinate parsing, POSIX schedule time parsing, main-thread UI updates, stale schedule response rejection, single-shot location fallbacks, map refresh timer lifecycle handling, ferry annotation refresh handling, failed map-location refresh handling, and generated metadata ignores.
+- The Make gates are location-independent. From another directory, pass the
+  checkout's Makefile by absolute path, such as
+  `make -f /path/to/Larkspur-Ferry/Makefile check`.
 - The `lint`, `test`, and `build` targets intentionally alias the existing
   check path so the standard local gate commands stay available while preserving
   the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
@@ -108,6 +111,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing Swift, build-script, Podfile, storyboard, plist, asset, or security documentation changes.
+- Use an absolute Makefile path when running those gates outside the checkout.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias guardrail.

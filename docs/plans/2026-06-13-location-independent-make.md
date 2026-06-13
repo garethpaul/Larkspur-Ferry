@@ -1,6 +1,6 @@
 # Location-Independent Larkspur Ferry Verification
 
-status: in progress
+status: completed
 
 ## Context
 
@@ -31,3 +31,16 @@ verification alias fails outside the repository directory.
 
 This changes verification path resolution only. Rollback restores the relative
 recipes and removes their checker, plan, and documentation contracts.
+
+## Verification
+
+- All four Make aliases passed in root and external-directory runs by using an
+  absolute Makefile path for the latter; the guarded build truthfully skipped
+  unavailable CocoaPods and Xcode tools after the static baseline passed.
+- Python checker compilation, build-script shell syntax, project metadata and
+  dependency-lock parsing, and `git diff --check` passed.
+- Verification rejected six isolated hostile mutations by their intended
+  contracts: root derivation, checker invocation, build-script location, plan
+  status, plan evidence, and README guidance.
+- The intended five-file diff passed secret-pattern, conflict-marker,
+  generated-artifact, and runtime/project/workflow change audits.
