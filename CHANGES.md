@@ -2,6 +2,8 @@
 
 ## 2026-06-14
 
+- Stopped CoreLocation updates before falling back from an empty location
+  callback.
 - Prevented in-flight ferry location responses from mutating the map after its
   screen disappears.
 

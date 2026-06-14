@@ -1,6 +1,6 @@
 # Empty Location Update Stop
 
-status: pending
+status: completed
 
 ## Context
 
@@ -23,11 +23,21 @@ ignored by the single-shot guard.
 - Do not add logging, analytics, persistence, or network behavior.
 - Do not claim simulator or physical-device CoreLocation coverage on Linux.
 
-## Planned Verification
+## Work Completed
 
-- Run all four Make gates from the repository root and `make check` through the
-  absolute Makefile path from an external directory.
-- Compile the Python checker and run diff, artifact, and changed-line credential
-  audits.
-- Reject isolated mutations that move cleanup after the empty-location guard,
-  remove cleanup or fallback behavior, or falsify plan evidence.
+- Moved CoreLocation cleanup ahead of the optional last-sample guard.
+- Preserved the single-shot state transition, empty-sample schedule fallback,
+  successful geocoding, and existing failure handling.
+- Replaced the over-broad cleanup contract with callback-scoped ordering checks.
+
+## Verification Completed
+
+- Python checker compilation passed. Before this completion record was added,
+  the baseline reached only the expected pending-plan evidence failure.
+- `make lint`, `make test`, `make build`, and `make check` passed from the
+  repository root; `make check` also passed through the absolute Makefile path.
+- Six isolated hostile mutations were rejected: removing or moving cleanup,
+  removing the single-shot state transition, replacing the last-sample guard,
+  reverting plan status, and erasing hostile-mutation verification evidence.
+- CocoaPods and Xcode were unavailable on this Linux host, so simulator,
+  physical-device, and live CoreLocation behavior are not claimed.

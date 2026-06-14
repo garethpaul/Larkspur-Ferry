@@ -163,13 +163,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
             return
         }
         locationUpdated = true
+        locationManager.stopUpdatingLocation()
 
         guard let location = locations.last else {
             loadScheduleWithoutLocation()
             return
         }
 
-        locationManager.stopUpdatingLocation()
         CLGeocoder().reverseGeocodeLocation(location) { (placemarks, error) -> Void in
             if error != nil {
                 self.loadScheduleWithoutLocation()

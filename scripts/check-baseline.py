@@ -110,6 +110,7 @@ def main():
         "docs/plans/2026-06-12-checkout-credential-boundary.md",
         "docs/plans/2026-06-13-location-independent-make.md",
         "docs/plans/2026-06-14-visible-map-response-publication.md",
+        "docs/plans/2026-06-14-empty-location-update-stop.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -197,6 +198,7 @@ def main():
     checkout_credential_plan = read("docs/plans/2026-06-12-checkout-credential-boundary.md")
     location_independent_make_plan = read("docs/plans/2026-06-13-location-independent-make.md")
     visible_map_plan = read("docs/plans/2026-06-14-visible-map-response-publication.md")
+    empty_location_plan = read("docs/plans/2026-06-14-empty-location-update-stop.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -290,6 +292,17 @@ def main():
             failures)
     require("locationManager.stopUpdatingLocation()" in view_controller and "didFailWithError" in view_controller and "loadScheduleWithoutLocation()" in view_controller,
             "location handling must stop updates on successful and unavailable location paths",
+            failures)
+    location_update_start = view_controller.find("func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation])")
+    location_update_end = view_controller.find("func locationManager(_ manager: CLLocationManager, didFailWithError", location_update_start)
+    location_update_body = view_controller[location_update_start:location_update_end]
+    mark_complete_index = location_update_body.find("locationUpdated = true")
+    stop_updates_index = location_update_body.find("locationManager.stopUpdatingLocation()", mark_complete_index)
+    last_location_index = location_update_body.find("guard let location = locations.last else", stop_updates_index)
+    fallback_index = location_update_body.find("loadScheduleWithoutLocation()", last_location_index)
+    require(location_update_start != -1 and location_update_end != -1 and
+            mark_complete_index < stop_updates_index < last_location_index < fallback_index,
+            "empty location updates must stop CoreLocation before schedule fallback",
             failures)
     require("print(" not in strip_swift_line_comments(view_controller),
             "app location flow must not print debug output",
@@ -497,6 +510,12 @@ def main():
             "hostile mutations" in visible_map_plan and
             "all four Make gates" in visible_map_plan,
             "visible map response plan must record completed status and verification",
+            failures)
+    require("status: completed" in empty_location_plan and
+            "Verification Completed" in empty_location_plan and
+            "hostile mutations" in empty_location_plan.lower() and
+            "empty" in empty_location_plan.lower(),
+            "empty location update plan must record completed verification",
             failures)
     require("in-flight map response" in readme.lower() and
             "in-flight ferry location responses" in changes.lower(),

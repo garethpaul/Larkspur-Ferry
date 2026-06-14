@@ -31,7 +31,7 @@ Priority:
 - Keep main-thread UI updates for schedule table and map API callbacks
 - Reject a stale schedule response after the user selects a newer direction
 - Keep malformed API payloads and unavailable location data from crashing the app
-- Keep initial direction lookup as a single-shot location flow with schedule fallback
+- Keep initial direction lookup as a single-shot location flow that stops updates before empty-sample or failure fallback
 - Keep the map refresh timer tied to the map screen lifecycle
 - Keep ferry annotation refresh targeted to stale ferry pins
 - Keep failed map-location refresh responses from clearing the last known ferry pin

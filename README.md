@@ -65,7 +65,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Ferry annotation refresh removes stale ferry pins without clearing unrelated map annotations.
 - Failed map-location refresh responses keep the last known ferry pin until a
   successful refresh can replace it.
-- The initial direction lookup is a single-shot location flow; unavailable or failed CoreLocation/geocoder data falls back to schedule loading.
+- The initial direction lookup is a single-shot location flow; unavailable, empty, or failed CoreLocation/geocoder data stops location updates before falling back to schedule loading.
 - API request parameters use deterministic query ordering after percent encoding.
 - Ferry API latitude and longitude strings use locale-independent coordinate parsing.
 - Schedule table times use POSIX schedule time parsing for fixed-format ferry API values.
