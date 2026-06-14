@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-14
+
+- Prevented in-flight ferry location responses from mutating the map after its
+  screen disappears.
+
 ## 2026-06-13
 
 - Made every Make verification alias resolve the checker and guarded build

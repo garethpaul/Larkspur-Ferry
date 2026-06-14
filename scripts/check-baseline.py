@@ -109,6 +109,7 @@ def main():
         "docs/plans/2026-06-12-stale-schedule-response-guard.md",
         "docs/plans/2026-06-12-checkout-credential-boundary.md",
         "docs/plans/2026-06-13-location-independent-make.md",
+        "docs/plans/2026-06-14-visible-map-response-publication.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -195,6 +196,7 @@ def main():
     stale_schedule_plan = read("docs/plans/2026-06-12-stale-schedule-response-guard.md")
     checkout_credential_plan = read("docs/plans/2026-06-12-checkout-credential-boundary.md")
     location_independent_make_plan = read("docs/plans/2026-06-13-location-independent-make.md")
+    visible_map_plan = read("docs/plans/2026-06-14-visible-map-response-publication.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -297,9 +299,23 @@ def main():
             failures)
     require("API.sharedInstance.getLocation(completion: { [weak self]" in map_controller and
             "DispatchQueue.main.async" in map_controller and
-            "guard let viewController = self else" in map_controller and
+            "guard let viewController = self," in map_controller and
+            "viewController.isMapVisible else" in map_controller and
             "viewController.mapView.addAnnotation(info1)" in map_controller,
-            "map API callback must update MapKit state on the main queue without retaining the view controller",
+            "map API callback must update a visible map on the main queue without retaining the view controller",
+            failures)
+    appear_index = map_controller.find("isMapVisible = true")
+    start_index = map_controller.find("startLocationRefreshTimer()", appear_index)
+    disappear_index = map_controller.find("isMapVisible = false")
+    invalidate_index = map_controller.find("locationRefreshTimer?.invalidate()", disappear_index)
+    visibility_guard_index = map_controller.find("viewController.isMapVisible else")
+    annotation_index = map_controller.find("viewController.removeExistingFerryAnnotations()", visibility_guard_index)
+    require("var isMapVisible = false" in map_controller and
+            -1 not in (appear_index, start_index, disappear_index, invalidate_index,
+                       visibility_guard_index, annotation_index) and
+            appear_index < start_index and disappear_index < invalidate_index and
+            visibility_guard_index < annotation_index,
+            "map visibility must bracket refresh work and guard response publication before UI mutation",
             failures)
     require("func removeExistingFerryAnnotations()" in map_controller and
             "filter { $0 is CustomPointAnnotation }" in map_controller and
@@ -476,6 +492,15 @@ def main():
             "root and external-directory" in location_independent_make_plan and
             "six isolated hostile mutations" in location_independent_make_plan,
             "location-independent Make plan must record completed root, external, and mutation verification",
+            failures)
+    require("status: completed" in visible_map_plan and
+            "hostile mutations" in visible_map_plan and
+            "all four Make gates" in visible_map_plan,
+            "visible map response plan must record completed status and verification",
+            failures)
+    require("in-flight map response" in readme.lower() and
+            "in-flight ferry location responses" in changes.lower(),
+            "README and CHANGES must document off-screen map response rejection",
             failures)
     workflow_files = sorted(
         path.relative_to(ROOT).as_posix()

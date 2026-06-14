@@ -60,6 +60,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `./build.sh` when the required platform toolchain is installed.
 - `build.sh` skips cleanly on hosts without CocoaPods or Xcode so static checks can run on non-macOS machines.
 - The map refresh timer starts while the map screen is visible and is invalidated when the screen disappears.
+- An in-flight map response is discarded after the map screen disappears, so
+  retained off-screen controllers do not recenter or replace annotations.
 - Ferry annotation refresh removes stale ferry pins without clearing unrelated map annotations.
 - Failed map-location refresh responses keep the last known ferry pin until a
   successful refresh can replace it.

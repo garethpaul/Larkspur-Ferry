@@ -18,6 +18,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var initialLocation = CLLocation(latitude: 37.79984, longitude: -122.38921)
     let regionRadius: CLLocationDistance = 4200
     var locationRefreshTimer: Timer?
+    private var isMapVisible = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,11 +29,13 @@ class MapViewController: UIViewController, MKMapViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        isMapVisible = true
         startLocationRefreshTimer()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        isMapVisible = false
         locationRefreshTimer?.invalidate()
         locationRefreshTimer = nil
     }
@@ -50,7 +53,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             }
 
             DispatchQueue.main.async {
-                guard let viewController = self else {
+                guard let viewController = self,
+                    viewController.isMapVisible else {
                     return
                 }
 
