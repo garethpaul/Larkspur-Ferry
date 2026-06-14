@@ -2,6 +2,8 @@
 
 ## 2026-06-14
 
+- Aligned location-derived direction state with the canonical schedule origin
+  before updating direction images or requesting ferry times.
 - Stopped CoreLocation updates before falling back from an empty location
   callback.
 - Prevented in-flight ferry location responses from mutating the map after its

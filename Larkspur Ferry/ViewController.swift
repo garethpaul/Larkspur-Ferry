@@ -113,6 +113,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     func displayLocationInfo(_ placemark: CLPlacemark) {
         self.locationManager.stopUpdatingLocation()
         if placemark.locality == "Larkspur" {
+            self.f = "Larkspur"
             self.fromImage.image = UIImage(named:"marin")
             self.toImage.image = UIImage(named:"sanfrancisco")
         } else {

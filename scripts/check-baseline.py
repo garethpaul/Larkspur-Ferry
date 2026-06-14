@@ -111,6 +111,7 @@ def main():
         "docs/plans/2026-06-13-location-independent-make.md",
         "docs/plans/2026-06-14-visible-map-response-publication.md",
         "docs/plans/2026-06-14-empty-location-update-stop.md",
+        "docs/plans/2026-06-14-location-direction-alignment.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -287,6 +288,22 @@ def main():
     require("locations.last" in view_controller and "placemarks?.first" in view_controller and "status == .denied" in view_controller,
             "location handling must guard missing locations, geocoder data, and denied authorization",
             failures)
+    display_start = view_controller.find("func displayLocationInfo(_ placemark: CLPlacemark)")
+    display_end = view_controller.find("func getBoats()", display_start)
+    display_body = view_controller[display_start:display_end]
+    larkspur_branch = display_body.split('if placemark.locality == "Larkspur"', 1)[-1].split("} else {", 1)[0]
+    other_branch = display_body.split("} else {", 1)[-1]
+    larkspur_assignment = larkspur_branch.find('self.f = "Larkspur"')
+    larkspur_image = larkspur_branch.find('self.fromImage.image = UIImage(named:"marin")')
+    other_assignment = other_branch.find('self.f = "San Francisco"')
+    other_image = other_branch.find('self.fromImage.image = UIImage(named: "sanfrancisco")')
+    schedule_fetch = display_body.find("getBoats()")
+    require(display_start != -1 and display_end != -1 and
+            larkspur_assignment != -1 and larkspur_image != -1 and
+            other_assignment != -1 and other_image != -1 and schedule_fetch != -1 and
+            larkspur_assignment < larkspur_image and other_assignment < other_image,
+            "reverse-geocoded direction branches must align schedule state before image and schedule publication",
+            failures)
     require("func loadScheduleWithoutLocation()" in view_controller and "locationUpdated = false" in view_controller and "guard !locationUpdated else" in view_controller,
             "location handling must reset lookup state, ignore repeated updates, and use a shared schedule fallback",
             failures)
@@ -416,6 +433,19 @@ def main():
             "failed map-location refresh" in vision.lower() and
             "failed map-location refresh" in security.lower(),
             "docs must describe failed map-location refresh handling",
+            failures)
+    direction_plan = read("docs/plans/2026-06-14-location-direction-alignment.md")
+    require("status: completed" in direction_plan and
+            "Verification Completed" in direction_plan and
+            "hostile mutations" in direction_plan.lower() and
+            "external-directory Make gate" in direction_plan,
+            "location direction alignment plan must record completed verification",
+            failures)
+    require("location-derived direction state" in readme.lower() and
+            "location-derived direction state" in vision.lower() and
+            "location-derived direction state" in security.lower() and
+            "location-derived direction state" in changes.lower(),
+            "project guidance must document location-derived direction alignment",
             failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",

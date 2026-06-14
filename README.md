@@ -100,6 +100,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The app uses the documented HTTPS ferry API endpoint in `Larkspur Ferry/API.swift`.
 - Keep API credentials, signing files, local CocoaPods output, and generated app data out of git if any are introduced later.
 - Location is requested only for in-app ferry direction assistance and should fall back to schedule loading when unavailable.
+- Location-derived direction state must update the canonical schedule origin
+  before direction images or a schedule request are published.
 
 ## Security and Privacy Notes
 

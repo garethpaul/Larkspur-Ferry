@@ -1,7 +1,7 @@
 ---
 title: Location Direction Alignment
 date: 2026-06-14
-status: planned
+status: completed
 execution: code
 ---
 
@@ -43,8 +43,23 @@ the subsequent `getBoats()` request using different origins.
 
 ## Work Completed
 
-Pending implementation.
+- Assigned `f = "Larkspur"` in the Larkspur placemark branch, matching the
+  existing canonical San Francisco assignment.
+- Enforced that both canonical direction assignments precede their image
+  mutations and the shared schedule fetch.
+- Added a mutation-sensitive static contract and synchronized repository
+  guidance without changing the locality rule or API behavior.
 
 ## Verification Completed
 
-Pending implementation and verification.
+- Python syntax and all four Make gates passed with the hosted-equivalent
+  `SKIP_XCODE_BUILD=1` boundary; the external-directory Make gate also passed.
+- Six hostile mutations were rejected across Larkspur assignment, San Francisco
+  assignment, assignment ordering, image contract, documentation, and completed
+  plan evidence weakening.
+- Exact diff, generated-artifact, protected project/workflow, whitespace,
+  conflict-marker, and changed-line credential audits passed.
+- xcodebuild and the legacy CocoaPods workspace were unavailable on Linux, so no
+  simulator, device, geocoder, or live ferry API behavior is claimed.
+- The hosted pull-request and security-alert result is recorded against the
+  exact pushed head in the external engineering tracker.
