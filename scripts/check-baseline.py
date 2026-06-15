@@ -112,6 +112,7 @@ def main():
         "docs/plans/2026-06-14-visible-map-response-publication.md",
         "docs/plans/2026-06-14-empty-location-update-stop.md",
         "docs/plans/2026-06-14-location-direction-alignment.md",
+        "docs/plans/2026-06-15-stale-geocode-direction-guard.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -200,6 +201,7 @@ def main():
     location_independent_make_plan = read("docs/plans/2026-06-13-location-independent-make.md")
     visible_map_plan = read("docs/plans/2026-06-14-visible-map-response-publication.md")
     empty_location_plan = read("docs/plans/2026-06-14-empty-location-update-stop.md")
+    stale_geocode_plan = read("docs/plans/2026-06-15-stale-geocode-direction-guard.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -306,6 +308,31 @@ def main():
             failures)
     require("func loadScheduleWithoutLocation()" in view_controller and "locationUpdated = false" in view_controller and "guard !locationUpdated else" in view_controller,
             "location handling must reset lookup state, ignore repeated updates, and use a shared schedule fallback",
+            failures)
+    tap_start = view_controller.find("func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)")
+    tap_end = view_controller.find("// UITableView", tap_start)
+    tap_body = view_controller[tap_start:tap_end]
+    tap_revision = tap_body.find("directionRevision += 1")
+    tap_direction = tap_body.find('if self.f == "Larkspur"')
+    location_lookup_start = view_controller.find("func findMyLocation()")
+    location_lookup_end = view_controller.find("func loadScheduleWithoutLocation()", location_lookup_start)
+    location_lookup_body = view_controller[location_lookup_start:location_lookup_end]
+    lookup_capture = location_lookup_body.find("locationLookupDirectionRevision = directionRevision")
+    lookup_start = location_lookup_body.find("locationManager.startUpdatingLocation()")
+    geocode_start = view_controller.find("let requestedDirectionRevision = locationLookupDirectionRevision")
+    geocode_request = view_controller.find("CLGeocoder().reverseGeocodeLocation(location) { [weak self]", geocode_start)
+    geocode_guard = view_controller.find("viewController.directionRevision == requestedDirectionRevision else", geocode_request)
+    geocode_error = view_controller.find("if error != nil", geocode_request)
+    geocode_publish = view_controller.find("viewController.displayLocationInfo(pm)", geocode_request)
+    require("var directionRevision = 0" in view_controller and
+            "var locationLookupDirectionRevision = 0" in view_controller and
+            -1 not in (tap_start, tap_end, tap_revision, tap_direction, location_lookup_start,
+                       location_lookup_end, lookup_capture, lookup_start, geocode_start,
+                       geocode_request, geocode_guard, geocode_error, geocode_publish) and
+            tap_revision < tap_direction and lookup_capture < lookup_start and
+            geocode_start < geocode_request < geocode_guard and
+            geocode_guard < geocode_error < geocode_publish,
+            "location-start direction revision must reject stale geocoder completion before fallback or publication",
             failures)
     require("locationManager.stopUpdatingLocation()" in view_controller and "didFailWithError" in view_controller and "loadScheduleWithoutLocation()" in view_controller,
             "location handling must stop updates on successful and unavailable location paths",
@@ -447,6 +474,12 @@ def main():
             "location-derived direction state" in changes.lower(),
             "project guidance must document location-derived direction alignment",
             failures)
+    require("stale geocoder completion" in readme.lower() and
+            "stale geocoder completion" in vision.lower() and
+            "stale geocoder completion" in security.lower() and
+            "stale geocoder completion" in changes.lower(),
+            "project guidance must document stale geocoder completion rejection",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -546,6 +579,13 @@ def main():
             "hostile mutations" in empty_location_plan.lower() and
             "empty" in empty_location_plan.lower(),
             "empty location update plan must record completed verification",
+            failures)
+    require("status: completed" in stale_geocode_plan and
+            "all four Make gates" in stale_geocode_plan and
+            "external-directory Make gate" in stale_geocode_plan and
+            "Eight isolated hostile mutations" in stale_geocode_plan and
+            "git diff --check" in stale_geocode_plan,
+            "stale geocode direction plan must record completed gate and mutation verification",
             failures)
     require("in-flight map response" in readme.lower() and
             "in-flight ferry location responses" in changes.lower(),

@@ -34,6 +34,7 @@ Priority:
 - Keep initial direction lookup as a single-shot location flow that stops updates before empty-sample or failure fallback
 - Keep location-derived direction state aligned with the canonical schedule
   origin before image and schedule publication
+- Reject a stale geocoder completion after a newer manual direction change
 - Keep the map refresh timer tied to the map screen lifecycle
 - Keep ferry annotation refresh targeted to stale ferry pins
 - Keep failed map-location refresh responses from clearing the last known ferry pin

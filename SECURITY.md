@@ -36,6 +36,8 @@ Helpful reports include:
 - The initial direction lookup should remain a single-shot location flow that stops CoreLocation updates before empty-sample or failure fallback schedule loading.
 - Location-derived direction state should align the canonical schedule origin
   before direction images or schedule requests are published.
+- A stale geocoder completion must not overwrite a newer manual ferry direction
+  or trigger its fallback schedule request.
 - The map refresh timer should be tied to the map screen lifecycle so ferry-location polling stops when the map view disappears.
 - Ferry annotation refresh should remove stale ferry pins without clearing unrelated map annotations.
 - Failed map-location refresh responses should preserve the last known ferry

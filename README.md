@@ -75,6 +75,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   mutating UIKit or MapKit state.
 - A stale schedule response is ignored after the user selects the opposite
   ferry direction.
+- A stale geocoder completion is ignored after any newer manual direction
+  change, including tap-away-and-back sequences.
 
 ## Testing and Verification
 

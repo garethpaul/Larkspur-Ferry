@@ -19,6 +19,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     @IBOutlet weak var fromText: UILabel!
     @IBOutlet weak var toText: UILabel!
     var f = "Larkspur"
+    var directionRevision = 0
+    var locationLookupDirectionRevision = 0
     
     var locationUpdated = false
     
@@ -47,6 +49,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
     {
+        directionRevision += 1
         if self.f == "Larkspur" {
             self.f = "San Francisco"
             self.fromImage.image = UIImage(named:"sanfrancisco")
@@ -97,6 +100,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Start finding location
     func findMyLocation() {
         locationUpdated = false
+        locationLookupDirectionRevision = directionRevision
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
@@ -171,16 +175,22 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
             return
         }
 
-        CLGeocoder().reverseGeocodeLocation(location) { (placemarks, error) -> Void in
+        let requestedDirectionRevision = locationLookupDirectionRevision
+        CLGeocoder().reverseGeocodeLocation(location) { [weak self] (placemarks, error) -> Void in
+            guard let viewController = self,
+                viewController.directionRevision == requestedDirectionRevision else {
+                    return
+            }
+
             if error != nil {
-                self.loadScheduleWithoutLocation()
+                viewController.loadScheduleWithoutLocation()
                 return
             }
 
             if let pm = placemarks?.first {
-                self.displayLocationInfo(pm)
+                viewController.displayLocationInfo(pm)
             } else {
-                self.loadScheduleWithoutLocation()
+                viewController.loadScheduleWithoutLocation()
             }
 
         }

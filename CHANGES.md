@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-15
+
+- Rejected a stale geocoder completion after a newer manual ferry direction
+  change, including tap-away-and-back sequences.
+
 ## 2026-06-14
 
 - Aligned location-derived direction state with the canonical schedule origin
