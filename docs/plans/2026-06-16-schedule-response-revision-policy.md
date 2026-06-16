@@ -36,5 +36,7 @@ test stack.
   runner cleanup, Make wiring, and completed plan evidence.
 - Shell and Python syntax, project references, executable modes, diff checks,
   artifact scans, and changed-line credential-pattern scans passed.
-- `swiftc` and Xcode are unavailable on this Linux host, so the hosted
-  pull-request check is the pre-merge authority for production Swift execution.
+- `swiftc` and Xcode are unavailable on this Linux host. On implementation head
+  `96748de8f936e816096e7addef855198304337b1`, hosted push run `27643518037`
+  and hosted pull-request check run `27643523921` passed; both logs recorded the
+  production policy harness and maintained baseline passing.
