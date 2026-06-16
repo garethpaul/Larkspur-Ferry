@@ -14,12 +14,18 @@ PLAN = ROOT / "docs/plans/2026-06-08-larkspur-ferry-baseline.md"
 MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-09-main-thread-ui-updates.md"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 EXPECTED_MAKEFILE = """ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+SWIFTC ?= swiftc
 
 .PHONY: build check lint test
 
 lint test build: check
 
 check:
+\t@if command -v "$(SWIFTC)" >/dev/null 2>&1; then \\
+\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-schedule-response-policy-tests.sh"; \\
+\telse \\
+\t\techo "swiftc unavailable; executable schedule response tests skipped"; \\
+\tfi
 \tpython3 "$(ROOT)/scripts/check-baseline.py"
 \tcd "$(ROOT)" && ./build.sh
 """
@@ -113,6 +119,7 @@ def main():
         "docs/plans/2026-06-14-empty-location-update-stop.md",
         "docs/plans/2026-06-14-location-direction-alignment.md",
         "docs/plans/2026-06-15-stale-geocode-direction-guard.md",
+        "docs/plans/2026-06-16-schedule-response-revision-policy.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -123,6 +130,7 @@ def main():
         "Larkspur Ferry/Info.plist",
         "Larkspur Ferry/API.swift",
         "Larkspur Ferry/Extensions.swift",
+        "Larkspur Ferry/ScheduleResponsePolicy.swift",
         "Larkspur Ferry/ViewController.swift",
         "Larkspur Ferry/MapViewController.swift",
         "Larkspur Ferry/PinAnnotation.swift",
@@ -133,6 +141,8 @@ def main():
         "Larkspur FerryUITests/Info.plist",
         "Larkspur FerryUITests/Larkspur_FerryUITests.swift",
         "Larkspur FerryUITests/SnapshotHelper.swift",
+        "Tests/ScheduleResponsePolicyTests/main.swift",
+        "scripts/run-schedule-response-policy-tests.sh",
     ]
 
     for relative_path in required_files:
@@ -171,7 +181,10 @@ def main():
     build_script = read("build.sh")
     api = read("Larkspur Ferry/API.swift")
     extensions = read("Larkspur Ferry/Extensions.swift")
+    schedule_response_policy = read("Larkspur Ferry/ScheduleResponsePolicy.swift")
     view_controller = read("Larkspur Ferry/ViewController.swift")
+    schedule_response_tests = read("Tests/ScheduleResponsePolicyTests/main.swift")
+    schedule_response_runner = read("scripts/run-schedule-response-policy-tests.sh")
     map_controller = read("Larkspur Ferry/MapViewController.swift")
     pin_annotation = read("Larkspur Ferry/PinAnnotation.swift")
     app_swift = "\n".join(strip_swift_line_comments(path.read_text(encoding="utf-8", errors="replace"))
@@ -202,6 +215,7 @@ def main():
     visible_map_plan = read("docs/plans/2026-06-14-visible-map-response-publication.md")
     empty_location_plan = read("docs/plans/2026-06-14-empty-location-update-stop.md")
     stale_geocode_plan = read("docs/plans/2026-06-15-stale-geocode-direction-guard.md")
+    schedule_response_plan = read("docs/plans/2026-06-16-schedule-response-revision-policy.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -209,6 +223,16 @@ def main():
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     require(shell_result.returncode == 0,
             f"build.sh must pass POSIX shell syntax checks: {shell_result.stderr.strip()}",
+            failures)
+    runner_shell_result = subprocess.run(
+        ["sh", "-n", "scripts/run-schedule-response-policy-tests.sh"],
+        cwd=str(ROOT),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    require(runner_shell_result.returncode == 0,
+            "schedule response runner must pass POSIX shell syntax checks: " + runner_shell_result.stderr.strip(),
             failures)
     require("function ci_build" not in build_script and "ci_build() {" in build_script and "ci_test() {" in build_script,
             "build.sh must use POSIX-compatible shell function syntax",
@@ -234,6 +258,10 @@ def main():
             failures)
     require("CoreLocation.framework" in project and "Pods_Larkspur_Ferry.framework" in project,
             "Xcode project must keep CoreLocation and CocoaPods framework references",
+            failures)
+    require(project.count("/* ScheduleResponsePolicy.swift */") == 3 and
+            project.count("/* ScheduleResponsePolicy.swift in Sources */") == 2,
+            "ScheduleResponsePolicy.swift must remain a unique app-target source",
             failures)
     require("Alamofire', '~> 4.0'" in podfile and "Alamofire (4.3.0)" in podlock,
             "Podfile and lockfile must preserve the pinned Alamofire baseline",
@@ -277,12 +305,43 @@ def main():
             "table rendering must guard indexes, cell casts, and invalid ferry times",
             failures)
     require("let requestedFrom = f" in view_controller and
+            "let requestedDirectionRevision = directionRevision" in view_controller and
             "API.sharedInstance.getTimes(from: requestedFrom) { [weak self]" in view_controller and
             "DispatchQueue.main.async" in view_controller and
             "guard let viewController = self," in view_controller and
-            "viewController.f == requestedFrom else" in view_controller and
+            "acceptsFerryScheduleResponse(" in view_controller and
+            "true || acceptsFerryScheduleResponse(" not in view_controller and
+            "requestedDirectionRevision: requestedDirectionRevision" in view_controller and
+            "currentDirectionRevision: viewController.directionRevision" in view_controller and
             "viewController.tableView.reloadData()" in view_controller,
-            "schedule API callback must reject stale directions and update table state on the main queue without retaining the view controller",
+            "schedule API callback must reject stale direction revisions and update table state on the main queue without retaining the view controller",
+            failures)
+    require('requestedFrom == "Larkspur" || requestedFrom == "San Francisco"' in schedule_response_policy and
+            "requestedFrom == currentFrom" in schedule_response_policy and
+            "requestedDirectionRevision == currentDirectionRevision" in schedule_response_policy,
+            "production schedule response policy must require a known matching origin and revision",
+            failures)
+    runner_contract = (
+        "Larkspur Ferry/ScheduleResponsePolicy.swift",
+        "Tests/ScheduleResponsePolicyTests/main.swift",
+        'mktemp -d "${TMPDIR:-/tmp}/larkspur-schedule-response-tests.XXXXXX"',
+        "trap cleanup 0",
+    )
+    require(all(schedule_response_runner.count(fragment) == 1 for fragment in runner_contract),
+            "schedule response runner must compile production policy with bounded cleanup",
+            failures)
+    test_contract = (
+        'true, "initial Larkspur response"',
+        'true, "current San Francisco response"',
+        'false, "changed origin"',
+        'false, "reverse changed origin"',
+        'false, "tap-away-and-back stale response"',
+        'false, "newer same-origin request"',
+        'false, "empty origin"',
+        'false, "unknown origin"',
+    )
+    require(all(schedule_response_tests.count(fragment) == 1 for fragment in test_contract),
+            "executable schedule response tests must preserve all eight behavioral cases",
             failures)
     require('dateFormatter.locale = Locale(identifier: "en_US_POSIX")' in view_controller,
             "schedule time parsing must use a POSIX locale for fixed-format API times",
@@ -480,6 +539,23 @@ def main():
             "stale geocoder completion" in changes.lower(),
             "project guidance must document stale geocoder completion rejection",
             failures)
+    require("revision-aware schedule response" in readme.lower() and
+            "revision-aware schedule response" in vision.lower() and
+            "revision-aware schedule response" in security.lower() and
+            "revision-aware schedule response" in changes.lower(),
+            "project guidance must document revision-aware schedule response rejection",
+            failures)
+    verification = schedule_response_plan.split("## Verification Completed", 1)[-1]
+    normalized_verification = " ".join(verification.lower().split())
+    require("status: completed" in schedule_response_plan and
+            "## Verification Completed" in schedule_response_plan and
+            "all four make gates passed" in normalized_verification and
+            "external absolute makefile gate passed" in normalized_verification and
+            "eight hostile mutations were rejected" in normalized_verification and
+            "hosted pull-request check" in normalized_verification and
+            not re.search(r"\b(?:pending|todo|tbd|not run|not yet)\b", verification, re.IGNORECASE),
+            "schedule response revision plan must retain completed verification evidence",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -616,7 +692,7 @@ def main():
             'SKIP_XCODE_BUILD: "1"' in workflow and
             "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
             "run: make check" in workflow,
-            "Check workflow must use one pinned credential-free checkout and stay read-only, bounded, and structural-only",
+            "Check workflow must use one pinned credential-free checkout and stay read-only and bounded",
             failures)
     guidance = " ".join("\n".join([read("README.md"), read("SECURITY.md"), read("VISION.md"), read("CHANGES.md")]).split()).lower()
     require("checkout credentials are not persisted" in guidance and "credential-free checkout" in guidance,

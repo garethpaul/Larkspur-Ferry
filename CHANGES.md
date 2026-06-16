@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-16
+
+- Added a revision-aware schedule response policy so tap-away-and-back callbacks
+  cannot publish an older same-origin schedule.
+- Added a standalone Swift harness that executes the production policy across
+  eight deterministic origin and revision cases from every Make gate.
+
 ## 2026-06-15
 
 - Rejected a stale geocoder completion after a newer manual ferry direction

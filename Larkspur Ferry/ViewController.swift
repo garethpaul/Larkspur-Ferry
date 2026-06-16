@@ -134,10 +134,16 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     func getBoats() {
         // Get the times for the ferry
         let requestedFrom = f
+        let requestedDirectionRevision = directionRevision
         API.sharedInstance.getTimes(from: requestedFrom) { [weak self] (boats) -> Void in
             DispatchQueue.main.async {
                 guard let viewController = self,
-                    viewController.f == requestedFrom else {
+                    acceptsFerryScheduleResponse(
+                        requestedFrom: requestedFrom,
+                        requestedDirectionRevision: requestedDirectionRevision,
+                        currentFrom: viewController.f,
+                        currentDirectionRevision: viewController.directionRevision
+                    ) else {
                     return
                 }
 

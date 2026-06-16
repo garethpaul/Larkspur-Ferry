@@ -13,10 +13,10 @@ Project context lives in [`README.md`](README.md).
 The goal is to keep the app useful, verifiable, and clear about its data source.
 
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
-`scripts/check-baseline.py` and the guarded `build.sh` path to verify the build
+the revision-aware schedule response harness, `scripts/check-baseline.py`, and
+the guarded `build.sh` path to verify the production callback decision, build
 script, CocoaPods metadata, Swift API parsing, single-shot location fallbacks,
-storyboards, plists, assets, failed map-location refresh handling, generated
-metadata ignores, and documentation.
+project assets, generated metadata ignores, and documentation.
 
 The current focus is:
 
@@ -30,6 +30,8 @@ Priority:
 - Keep POSIX schedule time parsing for fixed-format ferry API departure values
 - Keep main-thread UI updates for schedule table and map API callbacks
 - Reject a stale schedule response after the user selects a newer direction
+- Execute the revision-aware schedule response guard so tap-away-and-back
+  callbacks from older revisions remain rejected
 - Keep malformed API payloads and unavailable location data from crashing the app
 - Keep initial direction lookup as a single-shot location flow that stops updates before empty-sample or failure fallback
 - Keep location-derived direction state aligned with the canonical schedule
@@ -40,8 +42,9 @@ Priority:
 - Keep failed map-location refresh responses from clearing the last known ferry pin
 - Keep `make lint`, `make test`, `make build`, and `make check` available as
   local verification gates
-- Keep hosted project validation pinned, credential-free, and read-only on macOS through
-  structural project parsing and the explicit `SKIP_XCODE_BUILD=1` boundary
+- Keep hosted validation pinned, credential-free, and read-only on macOS through
+  production policy execution, project parsing, and the explicit
+  `SKIP_XCODE_BUILD=1` legacy-build boundary
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
 
