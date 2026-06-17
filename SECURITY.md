@@ -30,6 +30,8 @@ Helpful reports include:
   and validate HTTP success plus `application/json` before parsing.
 - Deterministic query parameter encoding should run after percent encoding so request construction is stable during review.
 - Locale-independent coordinate parsing should handle ferry API latitude and longitude strings consistently across device regions.
+- Ferry coordinates must be finite and remain within valid latitude and
+  longitude bounds before constructing location or map state.
 - POSIX schedule time parsing should handle fixed-format ferry API departure strings consistently across device regions.
 - Main-thread UI updates should be preserved for schedule table and MapKit callbacks so asynchronous API completions do not mutate UIKit or MapKit state off the main queue.
 - Revision-aware ferry-location callbacks must reject older overlapping responses and callbacks invalidated when the map begins disappearing before mutating MapKit state.

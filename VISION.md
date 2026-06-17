@@ -27,6 +27,7 @@ Priority:
 - Validate successful JSON ferry responses with a 10-second uncached request
 - Keep API request construction on deterministic query parameter ordering
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
+- Reject non-finite and out-of-range ferry coordinates before MapKit publication
 - Keep POSIX schedule time parsing for fixed-format ferry API departure values
 - Keep main-thread UI updates for schedule table and map API callbacks
 - Keep revision-aware ferry-location callbacks that reject older overlapping

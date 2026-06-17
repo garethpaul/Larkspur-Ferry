@@ -4,6 +4,8 @@
 
 - Added a revision-aware ferry-location response policy so an older overlapping
   callback cannot replace a newer map position or publish after disappearance.
+- Added finite coordinate domain validation so numeric but invalid ferry
+  latitude and longitude values cannot reach MapKit.
 
 ## 2026-06-16
 

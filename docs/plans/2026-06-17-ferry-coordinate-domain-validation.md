@@ -2,7 +2,7 @@
 title: Reject invalid ferry coordinate domains
 type: reliability
 date: 2026-06-17
-status: in_progress
+status: completed
 execution: code
 ---
 
@@ -85,8 +85,25 @@ guidance, and truthful completed-plan evidence against isolated weakening.
 
 ## Work Completed
 
-Pending implementation.
+- Added a pure finite/range predicate to the existing app-target location
+  policy.
+- Required parsed ferry coordinates to pass the predicate before `CLLocation`
+  construction, preserving the existing nil-result behavior on rejection.
+- Added executable boundary, out-of-range, NaN, and infinity cases and static
+  contracts for the production policy, API ordering, tests, documentation, and
+  completed evidence.
 
 ## Verification Completed
 
-Pending implementation and validation.
+- A pre-completion isolated snapshot passed `make check` from its repository
+  root and the absolute external-directory Make gate with
+  `SKIP_XCODE_BUILD=1`.
+- The finalized worktree passed all four repository-root Make gates and the
+  absolute external-directory Make gate with `SKIP_XCODE_BUILD=1`.
+- Eight isolated hostile mutations were rejected across both finiteness
+  clauses, latitude and longitude ranges, API delegation, an executable edge
+  case, changelog evidence, and plan completion.
+- Python syntax and `git diff --check` passed before final repository gates.
+- `swiftc`, CocoaPods, and Xcode are unavailable on this Linux host, so native
+  Swift compilation, simulator/device behavior, live ferry data, CoreLocation,
+  and UI test execution are not claimed.

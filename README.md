@@ -68,6 +68,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - The initial direction lookup is a single-shot location flow; unavailable, empty, or failed CoreLocation/geocoder data stops location updates before falling back to schedule loading.
 - API request parameters use deterministic query ordering after percent encoding.
 - Ferry API latitude and longitude strings use locale-independent coordinate parsing.
+- Parsed ferry coordinates must also be finite and remain within valid latitude
+  and longitude bounds before they can reach MapKit.
 - Schedule table times use POSIX schedule time parsing for fixed-format ferry API values.
 - Live ferry requests bypass cached data, time out after 10 seconds, and accept
   only successful `application/json` responses before parsing.

@@ -122,6 +122,7 @@ def main():
         "docs/plans/2026-06-15-stale-geocode-direction-guard.md",
         "docs/plans/2026-06-16-schedule-response-revision-policy.md",
         "docs/plans/2026-06-17-location-response-revision-policy.md",
+        "docs/plans/2026-06-17-ferry-coordinate-domain-validation.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -225,6 +226,7 @@ def main():
     stale_geocode_plan = read("docs/plans/2026-06-15-stale-geocode-direction-guard.md")
     schedule_response_plan = read("docs/plans/2026-06-16-schedule-response-revision-policy.md")
     location_response_plan = read("docs/plans/2026-06-17-location-response-revision-policy.md")
+    coordinate_domain_plan = read("docs/plans/2026-06-17-ferry-coordinate-domain-validation.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -369,6 +371,17 @@ def main():
     require("requestedRevision == currentRevision" in location_response_policy,
             "production location response policy must require the current request revision",
             failures)
+    require("latitude.isFinite && longitude.isFinite" in location_response_policy and
+            "(-90.0...90.0).contains(latitude)" in location_response_policy and
+            "(-180.0...180.0).contains(longitude)" in location_response_policy,
+            "production location policy must reject non-finite and out-of-range coordinates",
+            failures)
+    coordinate_guard_index = api.find("isValidFerryCoordinate(latitude: lat, longitude: lng)")
+    location_creation_index = api.find("CLLocation(latitude: lat, longitude: lng)")
+    require(coordinate_guard_index != -1 and location_creation_index != -1 and
+            coordinate_guard_index < location_creation_index,
+            "ferry API must validate parsed coordinates before CLLocation creation",
+            failures)
     location_runner_contract = (
         "Larkspur Ferry/LocationResponsePolicy.swift",
         "Tests/LocationResponsePolicyTests/main.swift",
@@ -387,6 +400,22 @@ def main():
     )
     require(all(location_response_tests.count(fragment) == 1 for fragment in location_test_contract),
             "executable location response tests must preserve all five revision cases",
+            failures)
+    coordinate_test_contract = (
+        'true, "normal ferry coordinate"',
+        'true, "minimum coordinate boundaries"',
+        'true, "maximum coordinate boundaries"',
+        'false, "latitude below minimum"',
+        'false, "latitude above maximum"',
+        'false, "longitude below minimum"',
+        'false, "longitude above maximum"',
+        'false, "NaN latitude"',
+        'false, "NaN longitude"',
+        'false, "infinite latitude"',
+        'false, "infinite longitude"',
+    )
+    require(all(location_response_tests.count(fragment) == 1 for fragment in coordinate_test_contract),
+            "executable location response tests must preserve all coordinate domain cases",
             failures)
     require('dateFormatter.locale = Locale(identifier: "en_US_POSIX")' in view_controller,
             "schedule time parsing must use a POSIX locale for fixed-format API times",
@@ -656,6 +685,9 @@ def main():
     require("locale-independent coordinate parsing" in changes.lower(),
             "CHANGES must record locale-independent coordinate parsing",
             failures)
+    require("finite coordinate domain validation" in changes.lower(),
+            "CHANGES must record finite coordinate domain validation",
+            failures)
     require("posix schedule time parsing" in changes.lower(),
             "CHANGES must record POSIX schedule time parsing",
             failures)
@@ -740,6 +772,12 @@ def main():
             "Eight isolated hostile mutations" in stale_geocode_plan and
             "git diff --check" in stale_geocode_plan,
             "stale geocode direction plan must record completed gate and mutation verification",
+            failures)
+    require("status: completed" in coordinate_domain_plan and
+            "Verification Completed" in coordinate_domain_plan and
+            "isolated hostile mutations" in coordinate_domain_plan.lower() and
+            "external" in coordinate_domain_plan.lower(),
+            "coordinate domain validation plan must record completed verification",
             failures)
     require("in-flight map response" in readme.lower() and
             "in-flight ferry location responses" in changes.lower(),
