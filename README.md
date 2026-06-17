@@ -73,6 +73,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   only successful `application/json` responses before parsing.
 - Schedule table and map API callbacks use main-thread UI updates before
   mutating UIKit or MapKit state.
+- Revision-aware ferry-location callbacks ignore older overlapping responses
+  and callbacks invalidated when the map begins disappearing.
 - A stale schedule response is ignored after the user selects the opposite
   ferry direction.
 - A revision-aware schedule response guard also rejects an older callback after
@@ -83,9 +85,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - `make lint`, `make test`, `make build`, and `make check` execute the production
-  schedule response policy when `swiftc` is available, then run
+  schedule and ferry-location response policies when `swiftc` is available,
+  then run
   `scripts/check-baseline.py` and the guarded `build.sh` path. The checker
-  preserves the eight-case harness, app-target wiring, API and location
+  preserves both executable harnesses, app-target wiring, API and location
   guardrails, project metadata, and documentation contracts.
 - The Make gates are location-independent. From another directory, pass the
   checkout's Makefile by absolute path, such as
@@ -95,10 +98,11 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
 - Pinned, credential-free `macos-15` GitHub Actions runs `make check` with
   `SKIP_XCODE_BUILD=1` and parses `Larkspur Ferry.xcodeproj` using
-  `xcodebuild -list`. It compiles and executes the revision-aware schedule
-  response policy without installing pods, calling the ferry API, requesting
-  location, building or signing the app, running a simulator, or executing the
-  legacy UI tests. Checkout credentials are not persisted after source retrieval.
+  `xcodebuild -list`. It compiles and executes the revision-aware schedule and
+  ferry-location response policies without installing pods, calling the ferry
+  API, requesting location, building or signing the app, running a simulator,
+  or executing the legacy UI tests. Checkout credentials are not persisted
+  after source retrieval.
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.

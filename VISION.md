@@ -29,6 +29,9 @@ Priority:
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
 - Keep POSIX schedule time parsing for fixed-format ferry API departure values
 - Keep main-thread UI updates for schedule table and map API callbacks
+- Keep revision-aware ferry-location callbacks that reject older overlapping
+  responses and callbacks invalidated when the map begins disappearing before
+  publishing MapKit state
 - Reject a stale schedule response after the user selects a newer direction
 - Execute the revision-aware schedule response guard so tap-away-and-back
   callbacks from older revisions remain rejected

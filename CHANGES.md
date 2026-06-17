@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-17
+
+- Added a revision-aware ferry-location response policy so an older overlapping
+  callback cannot replace a newer map position or publish after disappearance.
+
 ## 2026-06-16
 
 - Added a revision-aware schedule response policy so tap-away-and-back callbacks

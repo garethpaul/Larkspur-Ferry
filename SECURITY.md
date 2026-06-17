@@ -32,6 +32,7 @@ Helpful reports include:
 - Locale-independent coordinate parsing should handle ferry API latitude and longitude strings consistently across device regions.
 - POSIX schedule time parsing should handle fixed-format ferry API departure strings consistently across device regions.
 - Main-thread UI updates should be preserved for schedule table and MapKit callbacks so asynchronous API completions do not mutate UIKit or MapKit state off the main queue.
+- Revision-aware ferry-location callbacks must reject older overlapping responses and callbacks invalidated when the map begins disappearing before mutating MapKit state.
 - A stale schedule response must not replace the table after the user selects the opposite ferry direction.
 - A revision-aware schedule response guard must also reject older callbacks
   after a tap-away-and-back sequence returns to the same origin.
