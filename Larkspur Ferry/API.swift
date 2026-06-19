@@ -27,7 +27,8 @@ final class API {
                 let latString = result["lat"] as? String,
                 let lngString = result["lng"] as? String,
                 let lat = latString.toDouble(),
-                let lng = lngString.toDouble() else {
+                let lng = lngString.toDouble(),
+                isValidFerryCoordinate(latitude: lat, longitude: lng) else {
                     completion(nil)
                     return
             }
