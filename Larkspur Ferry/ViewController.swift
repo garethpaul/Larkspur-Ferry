@@ -19,6 +19,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     @IBOutlet weak var fromText: UILabel!
     @IBOutlet weak var toText: UILabel!
     var f = "Larkspur"
+    var directionRevision = 0
+    var locationLookupDirectionRevision = 0
+    var scheduleRequestRevision = 0
     
     var locationUpdated = false
     
@@ -47,6 +50,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     
     func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
     {
+        directionRevision += 1
         if self.f == "Larkspur" {
             self.f = "San Francisco"
             self.fromImage.image = UIImage(named:"sanfrancisco")
@@ -97,6 +101,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Start finding location
     func findMyLocation() {
         locationUpdated = false
+        locationLookupDirectionRevision = directionRevision
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
@@ -113,6 +118,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     func displayLocationInfo(_ placemark: CLPlacemark) {
         self.locationManager.stopUpdatingLocation()
         if placemark.locality == "Larkspur" {
+            self.f = "Larkspur"
             self.fromImage.image = UIImage(named:"marin")
             self.toImage.image = UIImage(named:"sanfrancisco")
         } else {
@@ -128,9 +134,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Get the Boats from the API and then reload the table
     func getBoats() {
         // Get the times for the ferry
-        API.sharedInstance.getTimes(from: f) { [weak self] (boats) -> Void in
+        scheduleRequestRevision += 1
+        let requestedFrom = f
+        let requestedDirectionRevision = directionRevision
+        let requestedScheduleRequestRevision = scheduleRequestRevision
+        API.sharedInstance.getTimes(from: requestedFrom) { [weak self] (boats) -> Void in
             DispatchQueue.main.async {
-                guard let viewController = self else {
+                guard let viewController = self,
+                    acceptsFerryScheduleResponse(
+                        requestedFrom: requestedFrom,
+                        requestedDirectionRevision: requestedDirectionRevision,
+                        requestedScheduleRequestRevision: requestedScheduleRequestRevision,
+                        currentFrom: viewController.f,
+                        currentDirectionRevision: viewController.directionRevision,
+                        currentScheduleRequestRevision: viewController.scheduleRequestRevision
+                    ) else {
                     return
                 }
 
@@ -161,23 +179,29 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
             return
         }
         locationUpdated = true
+        locationManager.stopUpdatingLocation()
 
         guard let location = locations.last else {
             loadScheduleWithoutLocation()
             return
         }
 
-        locationManager.stopUpdatingLocation()
-        CLGeocoder().reverseGeocodeLocation(location) { (placemarks, error) -> Void in
+        let requestedDirectionRevision = locationLookupDirectionRevision
+        CLGeocoder().reverseGeocodeLocation(location) { [weak self] (placemarks, error) -> Void in
+            guard let viewController = self,
+                viewController.directionRevision == requestedDirectionRevision else {
+                    return
+            }
+
             if error != nil {
-                self.loadScheduleWithoutLocation()
+                viewController.loadScheduleWithoutLocation()
                 return
             }
 
             if let pm = placemarks?.first {
-                self.displayLocationInfo(pm)
+                viewController.displayLocationInfo(pm)
             } else {
-                self.loadScheduleWithoutLocation()
+                viewController.loadScheduleWithoutLocation()
             }
 
         }

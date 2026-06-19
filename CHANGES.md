@@ -1,7 +1,48 @@
 # Changes
 
+## 2026-06-17
+
+- Added a revision-aware ferry-location response policy so an older overlapping
+  callback cannot replace a newer map position or publish after disappearance.
+- Added finite coordinate domain validation so numeric but invalid ferry
+  latitude and longitude values cannot reach MapKit.
+
+## 2026-06-16
+
+- Added a revision-aware schedule response policy so tap-away-and-back callbacks
+  cannot publish an older same-origin schedule.
+- Added a standalone Swift harness that executes the production policy across
+  nine deterministic origin, direction revision, and request revision cases from
+  every Make gate.
+
+## 2026-06-15
+
+- Rejected a stale geocoder completion after a newer manual ferry direction
+  change, including tap-away-and-back sequences.
+
+## 2026-06-14
+
+- Aligned location-derived direction state with the canonical schedule origin
+  before updating direction images or requesting ferry times.
+- Stopped CoreLocation updates before falling back from an empty location
+  callback.
+- Prevented in-flight ferry location responses from mutating the map after its
+  screen disappears.
+
+## 2026-06-13
+
+- Made every Make verification alias resolve the checker and guarded build
+  script from the checkout, including absolute Makefile invocations elsewhere.
+
+## 2026-06-12
+
+- Disabled persisted checkout credentials and enforced the sole pinned
+  credential-free workflow boundary without changing stale-response handling.
+
 ## 2026-06-10
 
+- Rejected a stale schedule response when a newer ferry direction selection is
+  already active.
 - Added uncached 10-second ferry requests with HTTP status and JSON content-type
   validation before response parsing.
 - Added pinned, read-only macOS hosted project validation with an explicit
