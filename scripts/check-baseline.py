@@ -14,12 +14,19 @@ PLAN = ROOT / "docs/plans/2026-06-08-larkspur-ferry-baseline.md"
 MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-09-main-thread-ui-updates.md"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 EXPECTED_MAKEFILE = """ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+SWIFTC ?= swiftc
 
 .PHONY: build check lint test
 
 lint test build: check
 
 check:
+\t@if command -v "$(SWIFTC)" >/dev/null 2>&1; then \\
+\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-schedule-response-policy-tests.sh"; \\
+\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-location-response-policy-tests.sh"; \\
+\telse \\
+\t\techo "swiftc unavailable; executable response policy tests skipped"; \\
+\tfi
 \tpython3 "$(ROOT)/scripts/check-baseline.py"
 \tcd "$(ROOT)" && ./build.sh
 """
@@ -110,6 +117,12 @@ def main():
         "docs/plans/2026-06-12-checkout-credential-boundary.md",
         "docs/plans/2026-06-13-location-independent-make.md",
         "docs/plans/2026-06-14-visible-map-response-publication.md",
+        "docs/plans/2026-06-14-empty-location-update-stop.md",
+        "docs/plans/2026-06-14-location-direction-alignment.md",
+        "docs/plans/2026-06-15-stale-geocode-direction-guard.md",
+        "docs/plans/2026-06-16-schedule-response-revision-policy.md",
+        "docs/plans/2026-06-17-location-response-revision-policy.md",
+        "docs/plans/2026-06-17-ferry-coordinate-domain-validation.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -120,6 +133,8 @@ def main():
         "Larkspur Ferry/Info.plist",
         "Larkspur Ferry/API.swift",
         "Larkspur Ferry/Extensions.swift",
+        "Larkspur Ferry/ScheduleResponsePolicy.swift",
+        "Larkspur Ferry/LocationResponsePolicy.swift",
         "Larkspur Ferry/ViewController.swift",
         "Larkspur Ferry/MapViewController.swift",
         "Larkspur Ferry/PinAnnotation.swift",
@@ -130,6 +145,10 @@ def main():
         "Larkspur FerryUITests/Info.plist",
         "Larkspur FerryUITests/Larkspur_FerryUITests.swift",
         "Larkspur FerryUITests/SnapshotHelper.swift",
+        "Tests/ScheduleResponsePolicyTests/main.swift",
+        "Tests/LocationResponsePolicyTests/main.swift",
+        "scripts/run-schedule-response-policy-tests.sh",
+        "scripts/run-location-response-policy-tests.sh",
     ]
 
     for relative_path in required_files:
@@ -168,7 +187,13 @@ def main():
     build_script = read("build.sh")
     api = read("Larkspur Ferry/API.swift")
     extensions = read("Larkspur Ferry/Extensions.swift")
+    schedule_response_policy = read("Larkspur Ferry/ScheduleResponsePolicy.swift")
+    location_response_policy = read("Larkspur Ferry/LocationResponsePolicy.swift")
     view_controller = read("Larkspur Ferry/ViewController.swift")
+    schedule_response_tests = read("Tests/ScheduleResponsePolicyTests/main.swift")
+    location_response_tests = read("Tests/LocationResponsePolicyTests/main.swift")
+    schedule_response_runner = read("scripts/run-schedule-response-policy-tests.sh")
+    location_response_runner = read("scripts/run-location-response-policy-tests.sh")
     map_controller = read("Larkspur Ferry/MapViewController.swift")
     pin_annotation = read("Larkspur Ferry/PinAnnotation.swift")
     app_swift = "\n".join(strip_swift_line_comments(path.read_text(encoding="utf-8", errors="replace"))
@@ -197,6 +222,11 @@ def main():
     checkout_credential_plan = read("docs/plans/2026-06-12-checkout-credential-boundary.md")
     location_independent_make_plan = read("docs/plans/2026-06-13-location-independent-make.md")
     visible_map_plan = read("docs/plans/2026-06-14-visible-map-response-publication.md")
+    empty_location_plan = read("docs/plans/2026-06-14-empty-location-update-stop.md")
+    stale_geocode_plan = read("docs/plans/2026-06-15-stale-geocode-direction-guard.md")
+    schedule_response_plan = read("docs/plans/2026-06-16-schedule-response-revision-policy.md")
+    location_response_plan = read("docs/plans/2026-06-17-location-response-revision-policy.md")
+    coordinate_domain_plan = read("docs/plans/2026-06-17-ferry-coordinate-domain-validation.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -204,6 +234,26 @@ def main():
     shell_result = subprocess.run(["sh", "-n", "build.sh"], cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     require(shell_result.returncode == 0,
             f"build.sh must pass POSIX shell syntax checks: {shell_result.stderr.strip()}",
+            failures)
+    runner_shell_result = subprocess.run(
+        ["sh", "-n", "scripts/run-schedule-response-policy-tests.sh"],
+        cwd=str(ROOT),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    require(runner_shell_result.returncode == 0,
+            "schedule response runner must pass POSIX shell syntax checks: " + runner_shell_result.stderr.strip(),
+            failures)
+    location_runner_shell_result = subprocess.run(
+        ["sh", "-n", "scripts/run-location-response-policy-tests.sh"],
+        cwd=str(ROOT),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    require(location_runner_shell_result.returncode == 0,
+            "location response runner must pass POSIX shell syntax checks: " + location_runner_shell_result.stderr.strip(),
             failures)
     require("function ci_build" not in build_script and "ci_build() {" in build_script and "ci_test() {" in build_script,
             "build.sh must use POSIX-compatible shell function syntax",
@@ -229,6 +279,14 @@ def main():
             failures)
     require("CoreLocation.framework" in project and "Pods_Larkspur_Ferry.framework" in project,
             "Xcode project must keep CoreLocation and CocoaPods framework references",
+            failures)
+    require(project.count("/* ScheduleResponsePolicy.swift */") == 3 and
+            project.count("/* ScheduleResponsePolicy.swift in Sources */") == 2,
+            "ScheduleResponsePolicy.swift must remain a unique app-target source",
+            failures)
+    require(project.count("/* LocationResponsePolicy.swift */") == 3 and
+            project.count("/* LocationResponsePolicy.swift in Sources */") == 2,
+            "LocationResponsePolicy.swift must remain a unique app-target source",
             failures)
     require("Alamofire', '~> 4.0'" in podfile and "Alamofire (4.3.0)" in podlock,
             "Podfile and lockfile must preserve the pinned Alamofire baseline",
@@ -271,13 +329,107 @@ def main():
     require("guard indexPath.row < self.items.count" in view_controller and "date.map" in view_controller,
             "table rendering must guard indexes, cell casts, and invalid ferry times",
             failures)
-    require("let requestedFrom = f" in view_controller and
+    schedule_request_start = view_controller.find("func getBoats()")
+    schedule_request_increment = view_controller.find("scheduleRequestRevision += 1", schedule_request_start)
+    schedule_origin_capture = view_controller.find("let requestedFrom = f", schedule_request_increment)
+    schedule_direction_capture = view_controller.find("let requestedDirectionRevision = directionRevision", schedule_origin_capture)
+    schedule_request_capture = view_controller.find("let requestedScheduleRequestRevision = scheduleRequestRevision", schedule_direction_capture)
+    schedule_api_call = view_controller.find("API.sharedInstance.getTimes(from: requestedFrom) { [weak self]", schedule_request_capture)
+    require("var scheduleRequestRevision = 0" in view_controller and
+            -1 not in (schedule_request_start, schedule_request_increment, schedule_origin_capture,
+                       schedule_direction_capture, schedule_request_capture, schedule_api_call) and
+            schedule_request_start < schedule_request_increment < schedule_origin_capture <
+            schedule_direction_capture < schedule_request_capture < schedule_api_call and
+            "let requestedDirectionRevision = directionRevision" in view_controller and
             "API.sharedInstance.getTimes(from: requestedFrom) { [weak self]" in view_controller and
             "DispatchQueue.main.async" in view_controller and
             "guard let viewController = self," in view_controller and
-            "viewController.f == requestedFrom else" in view_controller and
+            "acceptsFerryScheduleResponse(" in view_controller and
+            "true || acceptsFerryScheduleResponse(" not in view_controller and
+            "requestedDirectionRevision: requestedDirectionRevision" in view_controller and
+            "requestedScheduleRequestRevision: requestedScheduleRequestRevision" in view_controller and
+            "currentDirectionRevision: viewController.directionRevision" in view_controller and
+            "currentScheduleRequestRevision: viewController.scheduleRequestRevision" in view_controller and
             "viewController.tableView.reloadData()" in view_controller,
-            "schedule API callback must reject stale directions and update table state on the main queue without retaining the view controller",
+            "schedule API callback must reject stale direction and request revisions and update table state on the main queue without retaining the view controller",
+            failures)
+    require('requestedFrom == "Larkspur" || requestedFrom == "San Francisco"' in schedule_response_policy and
+            "requestedFrom == currentFrom" in schedule_response_policy and
+            "requestedDirectionRevision == currentDirectionRevision" in schedule_response_policy and
+            "requestedScheduleRequestRevision == currentScheduleRequestRevision" in schedule_response_policy,
+            "production schedule response policy must require a known matching origin, direction revision, and request revision",
+            failures)
+    runner_contract = (
+        "Larkspur Ferry/ScheduleResponsePolicy.swift",
+        "Tests/ScheduleResponsePolicyTests/main.swift",
+        'mktemp -d "${TMPDIR:-/tmp}/larkspur-schedule-response-tests.XXXXXX"',
+        "trap cleanup 0",
+    )
+    require(all(schedule_response_runner.count(fragment) == 1 for fragment in runner_contract),
+            "schedule response runner must compile production policy with bounded cleanup",
+            failures)
+    test_contract = (
+        'true, "initial Larkspur response"',
+        'true, "current San Francisco response"',
+        'false, "changed origin"',
+        'false, "reverse changed origin"',
+        'false, "tap-away-and-back stale response"',
+        'false, "newer same-origin direction request"',
+        'false, "newer same-origin schedule request"',
+        'false, "empty origin"',
+        'false, "unknown origin"',
+    )
+    require(all(schedule_response_tests.count(fragment) == 1 for fragment in test_contract),
+            "executable schedule response tests must preserve all nine behavioral cases",
+            failures)
+    require("requestedRevision == currentRevision" in location_response_policy,
+            "production location response policy must require the current request revision",
+            failures)
+    require("latitude.isFinite && longitude.isFinite" in location_response_policy and
+            "(-90.0...90.0).contains(latitude)" in location_response_policy and
+            "(-180.0...180.0).contains(longitude)" in location_response_policy,
+            "production location policy must reject non-finite and out-of-range coordinates",
+            failures)
+    coordinate_guard_index = api.find("isValidFerryCoordinate(latitude: lat, longitude: lng)")
+    location_creation_index = api.find("CLLocation(latitude: lat, longitude: lng)")
+    require(coordinate_guard_index != -1 and location_creation_index != -1 and
+            coordinate_guard_index < location_creation_index,
+            "ferry API must validate parsed coordinates before CLLocation creation",
+            failures)
+    location_runner_contract = (
+        "Larkspur Ferry/LocationResponsePolicy.swift",
+        "Tests/LocationResponsePolicyTests/main.swift",
+        'mktemp -d "${TMPDIR:-/tmp}/larkspur-location-response-tests.XXXXXX"',
+        "trap cleanup 0",
+    )
+    require(all(location_response_runner.count(fragment) == 1 for fragment in location_runner_contract),
+            "location response runner must compile production policy with bounded cleanup",
+            failures)
+    location_test_contract = (
+        'true, "initial request"',
+        'true, "latest request"',
+        'false, "older overlapping request"',
+        'false, "noncurrent future request"',
+        'false, "disappearance invalidation"',
+    )
+    require(all(location_response_tests.count(fragment) == 1 for fragment in location_test_contract),
+            "executable location response tests must preserve all five revision cases",
+            failures)
+    coordinate_test_contract = (
+        'true, "normal ferry coordinate"',
+        'true, "minimum coordinate boundaries"',
+        'true, "maximum coordinate boundaries"',
+        'false, "latitude below minimum"',
+        'false, "latitude above maximum"',
+        'false, "longitude below minimum"',
+        'false, "longitude above maximum"',
+        'false, "NaN latitude"',
+        'false, "NaN longitude"',
+        'false, "infinite latitude"',
+        'false, "infinite longitude"',
+    )
+    require(all(location_response_tests.count(fragment) == 1 for fragment in coordinate_test_contract),
+            "executable location response tests must preserve all coordinate domain cases",
             failures)
     require('dateFormatter.locale = Locale(identifier: "en_US_POSIX")' in view_controller,
             "schedule time parsing must use a POSIX locale for fixed-format API times",
@@ -285,11 +437,63 @@ def main():
     require("locations.last" in view_controller and "placemarks?.first" in view_controller and "status == .denied" in view_controller,
             "location handling must guard missing locations, geocoder data, and denied authorization",
             failures)
+    display_start = view_controller.find("func displayLocationInfo(_ placemark: CLPlacemark)")
+    display_end = view_controller.find("func getBoats()", display_start)
+    display_body = view_controller[display_start:display_end]
+    larkspur_branch = display_body.split('if placemark.locality == "Larkspur"', 1)[-1].split("} else {", 1)[0]
+    other_branch = display_body.split("} else {", 1)[-1]
+    larkspur_assignment = larkspur_branch.find('self.f = "Larkspur"')
+    larkspur_image = larkspur_branch.find('self.fromImage.image = UIImage(named:"marin")')
+    other_assignment = other_branch.find('self.f = "San Francisco"')
+    other_image = other_branch.find('self.fromImage.image = UIImage(named: "sanfrancisco")')
+    schedule_fetch = display_body.find("getBoats()")
+    require(display_start != -1 and display_end != -1 and
+            larkspur_assignment != -1 and larkspur_image != -1 and
+            other_assignment != -1 and other_image != -1 and schedule_fetch != -1 and
+            larkspur_assignment < larkspur_image and other_assignment < other_image,
+            "reverse-geocoded direction branches must align schedule state before image and schedule publication",
+            failures)
     require("func loadScheduleWithoutLocation()" in view_controller and "locationUpdated = false" in view_controller and "guard !locationUpdated else" in view_controller,
             "location handling must reset lookup state, ignore repeated updates, and use a shared schedule fallback",
             failures)
+    tap_start = view_controller.find("func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)")
+    tap_end = view_controller.find("// UITableView", tap_start)
+    tap_body = view_controller[tap_start:tap_end]
+    tap_revision = tap_body.find("directionRevision += 1")
+    tap_direction = tap_body.find('if self.f == "Larkspur"')
+    location_lookup_start = view_controller.find("func findMyLocation()")
+    location_lookup_end = view_controller.find("func loadScheduleWithoutLocation()", location_lookup_start)
+    location_lookup_body = view_controller[location_lookup_start:location_lookup_end]
+    lookup_capture = location_lookup_body.find("locationLookupDirectionRevision = directionRevision")
+    lookup_start = location_lookup_body.find("locationManager.startUpdatingLocation()")
+    geocode_start = view_controller.find("let requestedDirectionRevision = locationLookupDirectionRevision")
+    geocode_request = view_controller.find("CLGeocoder().reverseGeocodeLocation(location) { [weak self]", geocode_start)
+    geocode_guard = view_controller.find("viewController.directionRevision == requestedDirectionRevision else", geocode_request)
+    geocode_error = view_controller.find("if error != nil", geocode_request)
+    geocode_publish = view_controller.find("viewController.displayLocationInfo(pm)", geocode_request)
+    require("var directionRevision = 0" in view_controller and
+            "var locationLookupDirectionRevision = 0" in view_controller and
+            -1 not in (tap_start, tap_end, tap_revision, tap_direction, location_lookup_start,
+                       location_lookup_end, lookup_capture, lookup_start, geocode_start,
+                       geocode_request, geocode_guard, geocode_error, geocode_publish) and
+            tap_revision < tap_direction and lookup_capture < lookup_start and
+            geocode_start < geocode_request < geocode_guard and
+            geocode_guard < geocode_error < geocode_publish,
+            "location-start direction revision must reject stale geocoder completion before fallback or publication",
+            failures)
     require("locationManager.stopUpdatingLocation()" in view_controller and "didFailWithError" in view_controller and "loadScheduleWithoutLocation()" in view_controller,
             "location handling must stop updates on successful and unavailable location paths",
+            failures)
+    location_update_start = view_controller.find("func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation])")
+    location_update_end = view_controller.find("func locationManager(_ manager: CLLocationManager, didFailWithError", location_update_start)
+    location_update_body = view_controller[location_update_start:location_update_end]
+    mark_complete_index = location_update_body.find("locationUpdated = true")
+    stop_updates_index = location_update_body.find("locationManager.stopUpdatingLocation()", mark_complete_index)
+    last_location_index = location_update_body.find("guard let location = locations.last else", stop_updates_index)
+    fallback_index = location_update_body.find("loadScheduleWithoutLocation()", last_location_index)
+    require(location_update_start != -1 and location_update_end != -1 and
+            mark_complete_index < stop_updates_index < last_location_index < fallback_index,
+            "empty location updates must stop CoreLocation before schedule fallback",
             failures)
     require("print(" not in strip_swift_line_comments(view_controller),
             "app location flow must not print debug output",
@@ -300,22 +504,36 @@ def main():
     require("API.sharedInstance.getLocation(completion: { [weak self]" in map_controller and
             "DispatchQueue.main.async" in map_controller and
             "guard let viewController = self," in map_controller and
-            "viewController.isMapVisible else" in map_controller and
+            "viewController.isMapVisible," in map_controller and
+            "acceptsFerryLocationResponse(" in map_controller and
+            "requestedRevision: requestedLocationRevision" in map_controller and
+            "currentRevision: viewController.locationRequestRevision" in map_controller and
             "viewController.mapView.addAnnotation(info1)" in map_controller,
-            "map API callback must update a visible map on the main queue without retaining the view controller",
+            "map API callback must publish only the current visible response on the main queue without retaining the view controller",
             failures)
     appear_index = map_controller.find("isMapVisible = true")
     start_index = map_controller.find("startLocationRefreshTimer()", appear_index)
     disappear_index = map_controller.find("isMapVisible = false")
     invalidate_index = map_controller.find("locationRefreshTimer?.invalidate()", disappear_index)
-    visibility_guard_index = map_controller.find("viewController.isMapVisible else")
+    visibility_guard_index = map_controller.find("viewController.isMapVisible,")
+    revision_guard_index = map_controller.find("acceptsFerryLocationResponse(", visibility_guard_index)
     annotation_index = map_controller.find("viewController.removeExistingFerryAnnotations()", visibility_guard_index)
+    request_start = map_controller.find("func getLocation()")
+    request_increment = map_controller.find("locationRequestRevision += 1", request_start)
+    request_capture = map_controller.find("let requestedLocationRevision = locationRequestRevision", request_increment)
+    request_call = map_controller.find("API.sharedInstance.getLocation", request_capture)
+    disappearance_revision = map_controller.find("locationRequestRevision += 1", disappear_index)
     require("var isMapVisible = false" in map_controller and
+            "var locationRequestRevision = 0" in map_controller and
             -1 not in (appear_index, start_index, disappear_index, invalidate_index,
-                       visibility_guard_index, annotation_index) and
+                       visibility_guard_index, revision_guard_index, annotation_index,
+                       request_start, request_increment, request_capture, request_call,
+                       disappearance_revision) and
             appear_index < start_index and disappear_index < invalidate_index and
-            visibility_guard_index < annotation_index,
-            "map visibility must bracket refresh work and guard response publication before UI mutation",
+            disappear_index < disappearance_revision < invalidate_index and
+            request_increment < request_capture < request_call and
+            visibility_guard_index < revision_guard_index < annotation_index,
+            "map visibility and request revisions must bracket refresh work before UI mutation",
             failures)
     require("func removeExistingFerryAnnotations()" in map_controller and
             "filter { $0 is CustomPointAnnotation }" in map_controller and
@@ -325,7 +543,8 @@ def main():
     require(map_controller.count("removeExistingFerryAnnotations()") >= 2 and "if self.mapView.annotations.count == 1" not in map_controller,
             "map flow must refresh ferry annotations without relying on the total annotation count",
             failures)
-    require("func getLocation() {\n        API.sharedInstance.getLocation" in map_controller and
+    require("func getLocation() {" in map_controller and
+            "API.sharedInstance.getLocation" in map_controller and
             "viewController.removeExistingFerryAnnotations()" in map_controller,
             "map flow must preserve the last ferry annotation until a successful refresh replaces it",
             failures)
@@ -404,6 +623,60 @@ def main():
             "failed map-location refresh" in security.lower(),
             "docs must describe failed map-location refresh handling",
             failures)
+    direction_plan = read("docs/plans/2026-06-14-location-direction-alignment.md")
+    require("status: completed" in direction_plan and
+            "Verification Completed" in direction_plan and
+            "hostile mutations" in direction_plan.lower() and
+            "external-directory Make gate" in direction_plan,
+            "location direction alignment plan must record completed verification",
+            failures)
+    require("location-derived direction state" in readme.lower() and
+            "location-derived direction state" in vision.lower() and
+            "location-derived direction state" in security.lower() and
+            "location-derived direction state" in changes.lower(),
+            "project guidance must document location-derived direction alignment",
+            failures)
+    require("stale geocoder completion" in readme.lower() and
+            "stale geocoder completion" in vision.lower() and
+            "stale geocoder completion" in security.lower() and
+            "stale geocoder completion" in changes.lower(),
+            "project guidance must document stale geocoder completion rejection",
+            failures)
+    require("revision-aware schedule response" in readme.lower() and
+            "revision-aware schedule response" in vision.lower() and
+            "revision-aware schedule response" in security.lower() and
+            "revision-aware schedule response" in changes.lower(),
+            "project guidance must document revision-aware schedule response rejection",
+            failures)
+    require("revision-aware ferry-location" in readme.lower() and
+            "revision-aware ferry-location" in vision.lower() and
+            "revision-aware ferry-location" in security.lower() and
+            "revision-aware ferry-location" in changes.lower(),
+            "project guidance must document revision-aware ferry-location response rejection",
+            failures)
+    verification = schedule_response_plan.split("## Verification Completed", 1)[-1]
+    normalized_verification = " ".join(verification.lower().split())
+    require("status: completed" in schedule_response_plan and
+            "## Verification Completed" in schedule_response_plan and
+            "all four make gates passed" in normalized_verification and
+            "external absolute makefile gate passed" in normalized_verification and
+            "nine hostile mutations were rejected" in normalized_verification and
+            "hosted pull-request check" in normalized_verification and
+            not re.search(r"\b(?:pending|todo|tbd|not run|not yet)\b", verification, re.IGNORECASE),
+            "schedule response revision plan must retain completed verification evidence",
+            failures)
+    location_verification = location_response_plan.split("## Verification Completed", 1)[-1]
+    normalized_location_verification = " ".join(location_verification.lower().split())
+    require("status: completed" in location_response_plan and
+            "## Work Completed" in location_response_plan and
+            "## Verification Completed" in location_response_plan and
+            "all four make gates passed" in normalized_location_verification and
+            "external absolute makefile gate passed" in normalized_location_verification and
+            "nine isolated hostile mutations were rejected" in normalized_location_verification and
+            "signal-143 handling" in normalized_location_verification and
+            not re.search(r"\b(?:pending|todo|tbd|not run|not yet)\b", location_verification, re.IGNORECASE),
+            "location response revision plan must retain completed verification evidence",
+            failures)
     require("Alamofire" in overview and "MapKit" in overview and "Integrations: Twitter" not in overview,
             "overview SVG must name the real app integrations",
             failures)
@@ -425,6 +698,9 @@ def main():
             failures)
     require("locale-independent coordinate parsing" in changes.lower(),
             "CHANGES must record locale-independent coordinate parsing",
+            failures)
+    require("finite coordinate domain validation" in changes.lower(),
+            "CHANGES must record finite coordinate domain validation",
             failures)
     require("posix schedule time parsing" in changes.lower(),
             "CHANGES must record POSIX schedule time parsing",
@@ -498,6 +774,25 @@ def main():
             "all four Make gates" in visible_map_plan,
             "visible map response plan must record completed status and verification",
             failures)
+    require("status: completed" in empty_location_plan and
+            "Verification Completed" in empty_location_plan and
+            "hostile mutations" in empty_location_plan.lower() and
+            "empty" in empty_location_plan.lower(),
+            "empty location update plan must record completed verification",
+            failures)
+    require("status: completed" in stale_geocode_plan and
+            "all four Make gates" in stale_geocode_plan and
+            "external-directory Make gate" in stale_geocode_plan and
+            "Eight isolated hostile mutations" in stale_geocode_plan and
+            "git diff --check" in stale_geocode_plan,
+            "stale geocode direction plan must record completed gate and mutation verification",
+            failures)
+    require("status: completed" in coordinate_domain_plan and
+            "Verification Completed" in coordinate_domain_plan and
+            "isolated hostile mutations" in coordinate_domain_plan.lower() and
+            "external" in coordinate_domain_plan.lower(),
+            "coordinate domain validation plan must record completed verification",
+            failures)
     require("in-flight map response" in readme.lower() and
             "in-flight ferry location responses" in changes.lower(),
             "README and CHANGES must document off-screen map response rejection",
@@ -520,14 +815,16 @@ def main():
             failures)
     require(checkout_step is not None and
             actions == ["actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"] and
+            workflow.count("permissions:") == 1 and
             workflow.count("persist-credentials:") == 1 and
             "persist-credentials: true" not in workflow and
+            re.search(r"(?m)^\s+[A-Za-z-]+:\s+write\s*$", workflow) is None and
             "permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
             "runs-on: macos-15" in workflow and "timeout-minutes: 10" in workflow and
             'SKIP_XCODE_BUILD: "1"' in workflow and
             "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
             "run: make check" in workflow,
-            "Check workflow must use one pinned credential-free checkout and stay read-only, bounded, and structural-only",
+            "Check workflow must use one pinned credential-free checkout and stay read-only and bounded",
             failures)
     guidance = " ".join("\n".join([read("README.md"), read("SECURITY.md"), read("VISION.md"), read("CHANGES.md")]).split()).lower()
     require("checkout credentials are not persisted" in guidance and "credential-free checkout" in guidance,
