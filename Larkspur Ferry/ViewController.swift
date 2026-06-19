@@ -21,6 +21,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     var f = "Larkspur"
     var directionRevision = 0
     var locationLookupDirectionRevision = 0
+    var scheduleRequestRevision = 0
     
     var locationUpdated = false
     
@@ -133,11 +134,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     // Get the Boats from the API and then reload the table
     func getBoats() {
         // Get the times for the ferry
+        scheduleRequestRevision += 1
         let requestedFrom = f
+        let requestedDirectionRevision = directionRevision
+        let requestedScheduleRequestRevision = scheduleRequestRevision
         API.sharedInstance.getTimes(from: requestedFrom) { [weak self] (boats) -> Void in
             DispatchQueue.main.async {
                 guard let viewController = self,
-                    viewController.f == requestedFrom else {
+                    acceptsFerryScheduleResponse(
+                        requestedFrom: requestedFrom,
+                        requestedDirectionRevision: requestedDirectionRevision,
+                        requestedScheduleRequestRevision: requestedScheduleRequestRevision,
+                        currentFrom: viewController.f,
+                        currentDirectionRevision: viewController.directionRevision,
+                        currentScheduleRequestRevision: viewController.scheduleRequestRevision
+                    ) else {
                     return
                 }
 
