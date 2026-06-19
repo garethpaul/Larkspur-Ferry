@@ -37,7 +37,8 @@ Helpful reports include:
 - Revision-aware ferry-location callbacks must reject older overlapping responses and callbacks invalidated when the map begins disappearing before mutating MapKit state.
 - A stale schedule response must not replace the table after the user selects the opposite ferry direction.
 - A revision-aware schedule response guard must also reject older callbacks
-  after a tap-away-and-back sequence returns to the same origin.
+  after a tap-away-and-back sequence returns to the same origin, or after a
+  newer same-origin schedule request is already active.
 - The initial direction lookup should remain a single-shot location flow that stops CoreLocation updates before empty-sample or failure fallback schedule loading.
 - Location-derived direction state should align the canonical schedule origin
   before direction images or schedule requests are published.

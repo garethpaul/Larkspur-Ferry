@@ -35,7 +35,8 @@ Priority:
   publishing MapKit state
 - Reject a stale schedule response after the user selects a newer direction
 - Execute the revision-aware schedule response guard so tap-away-and-back
-  callbacks from older revisions remain rejected
+  callbacks from older revisions and older same-origin schedule requests remain
+  rejected
 - Keep malformed API payloads and unavailable location data from crashing the app
 - Keep initial direction lookup as a single-shot location flow that stops updates before empty-sample or failure fallback
 - Keep location-derived direction state aligned with the canonical schedule

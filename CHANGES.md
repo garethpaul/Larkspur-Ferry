@@ -12,7 +12,8 @@
 - Added a revision-aware schedule response policy so tap-away-and-back callbacks
   cannot publish an older same-origin schedule.
 - Added a standalone Swift harness that executes the production policy across
-  eight deterministic origin and revision cases from every Make gate.
+  nine deterministic origin, direction revision, and request revision cases from
+  every Make gate.
 
 ## 2026-06-15
 

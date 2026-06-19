@@ -80,7 +80,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - A stale schedule response is ignored after the user selects the opposite
   ferry direction.
 - A revision-aware schedule response guard also rejects an older callback after
-  the user taps away from and back to the same ferry origin.
+  the user taps away from and back to the same ferry origin, and rejects older
+  same-origin callbacks when a newer schedule request is already active.
 - A stale geocoder completion is ignored after any newer manual direction
   change, including tap-away-and-back sequences.
 
