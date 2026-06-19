@@ -30,11 +30,15 @@ Helpful reports include:
   and validate HTTP success plus `application/json` before parsing.
 - Deterministic query parameter encoding should run after percent encoding so request construction is stable during review.
 - Locale-independent coordinate parsing should handle ferry API latitude and longitude strings consistently across device regions.
+- Ferry coordinates must be finite and remain within valid latitude and
+  longitude bounds before constructing location or map state.
 - POSIX schedule time parsing should handle fixed-format ferry API departure strings consistently across device regions.
 - Main-thread UI updates should be preserved for schedule table and MapKit callbacks so asynchronous API completions do not mutate UIKit or MapKit state off the main queue.
+- Revision-aware ferry-location callbacks must reject older overlapping responses and callbacks invalidated when the map begins disappearing before mutating MapKit state.
 - A stale schedule response must not replace the table after the user selects the opposite ferry direction.
 - A revision-aware schedule response guard must also reject older callbacks
-  after a tap-away-and-back sequence returns to the same origin.
+  after a tap-away-and-back sequence returns to the same origin, or after a
+  newer same-origin schedule request is already active.
 - The initial direction lookup should remain a single-shot location flow that stops CoreLocation updates before empty-sample or failure fallback schedule loading.
 - Location-derived direction state should align the canonical schedule origin
   before direction images or schedule requests are published.

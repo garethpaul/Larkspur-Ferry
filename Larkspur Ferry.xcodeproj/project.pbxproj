@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A16061611C04445D009A6111 /* ScheduleResponsePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16061621C04445D009A6111 /* ScheduleResponsePolicy.swift */; };
+		A17061711C04445D009A6111 /* LocationResponsePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17061721C04445D009A6111 /* LocationResponsePolicy.swift */; };
 		886EA3C41C1F918F00E864A0 /* FerryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 886EA3C31C1F918F00E864A0 /* FerryCell.swift */; };
 		8899B7881C037F6D00512759 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8899B7871C037F6D00512759 /* CoreLocation.framework */; };
 		889C7DD21C04445D009A6111 /* Ferry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889C7DD11C04445D009A6111 /* Ferry.swift */; };
@@ -37,6 +38,7 @@
 
 /* Begin PBXFileReference section */
 		A16061621C04445D009A6111 /* ScheduleResponsePolicy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScheduleResponsePolicy.swift; sourceTree = "<group>"; };
+		A17061721C04445D009A6111 /* LocationResponsePolicy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationResponsePolicy.swift; sourceTree = "<group>"; };
 		3AFC5927A49D0AA110B3C5FB /* Pods-Larkspur Ferry.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Larkspur Ferry.release.xcconfig"; path = "Pods/Target Support Files/Pods-Larkspur Ferry/Pods-Larkspur Ferry.release.xcconfig"; sourceTree = "<group>"; };
 		886EA3C31C1F918F00E864A0 /* FerryCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FerryCell.swift; sourceTree = "<group>"; };
 		8899B7871C037F6D00512759 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
@@ -124,6 +126,7 @@
 			children = (
 				88CBBCE81C037B1F000D263E /* AppDelegate.swift */,
 				A16061621C04445D009A6111 /* ScheduleResponsePolicy.swift */,
+				A17061721C04445D009A6111 /* LocationResponsePolicy.swift */,
 				88CBBCEA1C037B1F000D263E /* ViewController.swift */,
 				889C7DD11C04445D009A6111 /* Ferry.swift */,
 				88C12B591A54CCC9006DA21E /* API.swift */,
@@ -311,6 +314,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A16061611C04445D009A6111 /* ScheduleResponsePolicy.swift in Sources */,
+				A17061711C04445D009A6111 /* LocationResponsePolicy.swift in Sources */,
 				889C7DD21C04445D009A6111 /* Ferry.swift in Sources */,
 				88FD06CB1C0A7EC500EA6A9F /* Extensions.swift in Sources */,
 				886EA3C41C1F918F00E864A0 /* FerryCell.swift in Sources */,

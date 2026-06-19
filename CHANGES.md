@@ -1,11 +1,19 @@
 # Changes
 
+## 2026-06-17
+
+- Added a revision-aware ferry-location response policy so an older overlapping
+  callback cannot replace a newer map position or publish after disappearance.
+- Added finite coordinate domain validation so numeric but invalid ferry
+  latitude and longitude values cannot reach MapKit.
+
 ## 2026-06-16
 
 - Added a revision-aware schedule response policy so tap-away-and-back callbacks
   cannot publish an older same-origin schedule.
 - Added a standalone Swift harness that executes the production policy across
-  eight deterministic origin and revision cases from every Make gate.
+  nine deterministic origin, direction revision, and request revision cases from
+  every Make gate.
 
 ## 2026-06-15
 
