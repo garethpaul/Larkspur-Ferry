@@ -17,9 +17,10 @@ test stack.
 
 ## Requirements
 
-- Accept a schedule callback only when its origin and direction revision both
-  match current controller state.
-- Reject unknown origins and tap-away-and-back callbacks from older revisions.
+- Accept a schedule callback only when its origin, direction revision, and
+  request revision all match current controller state.
+- Reject unknown origins, tap-away-and-back callbacks from older revisions, and
+  older same-origin callbacks when a newer schedule request is already active.
 - Keep the pure policy in the app target and delegate the callback guard to it.
 - Compile and execute the production policy from every Make gate when `swiftc`
   is available.
@@ -31,9 +32,9 @@ test stack.
 - The external absolute Makefile gate passed from `/tmp`.
 - Fake-compiler success, exit-7 failure, signal-143 cleanup, and temporary-build
   cleanup probes passed for the standalone runner.
-- Eight hostile mutations were rejected across origin validation, revision
-  matching, controller delegation, app-target membership, executable cases,
-  runner cleanup, Make wiring, and completed plan evidence.
+- Nine hostile mutations were rejected across origin validation, direction and
+  request revision matching, controller delegation, app-target membership,
+  executable cases, runner cleanup, Make wiring, and completed plan evidence.
 - Shell and Python syntax, project references, executable modes, diff checks,
   artifact scans, and changed-line credential-pattern scans passed.
 - `swiftc` and Xcode are unavailable on this Linux host. On implementation head

@@ -122,6 +122,7 @@ def main():
         "docs/plans/2026-06-15-stale-geocode-direction-guard.md",
         "docs/plans/2026-06-16-schedule-response-revision-policy.md",
         "docs/plans/2026-06-17-location-response-revision-policy.md",
+        "docs/plans/2026-06-17-ferry-coordinate-domain-validation.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -225,6 +226,7 @@ def main():
     stale_geocode_plan = read("docs/plans/2026-06-15-stale-geocode-direction-guard.md")
     schedule_response_plan = read("docs/plans/2026-06-16-schedule-response-revision-policy.md")
     location_response_plan = read("docs/plans/2026-06-17-location-response-revision-policy.md")
+    coordinate_domain_plan = read("docs/plans/2026-06-17-ferry-coordinate-domain-validation.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -327,7 +329,17 @@ def main():
     require("guard indexPath.row < self.items.count" in view_controller and "date.map" in view_controller,
             "table rendering must guard indexes, cell casts, and invalid ferry times",
             failures)
-    require("let requestedFrom = f" in view_controller and
+    schedule_request_start = view_controller.find("func getBoats()")
+    schedule_request_increment = view_controller.find("scheduleRequestRevision += 1", schedule_request_start)
+    schedule_origin_capture = view_controller.find("let requestedFrom = f", schedule_request_increment)
+    schedule_direction_capture = view_controller.find("let requestedDirectionRevision = directionRevision", schedule_origin_capture)
+    schedule_request_capture = view_controller.find("let requestedScheduleRequestRevision = scheduleRequestRevision", schedule_direction_capture)
+    schedule_api_call = view_controller.find("API.sharedInstance.getTimes(from: requestedFrom) { [weak self]", schedule_request_capture)
+    require("var scheduleRequestRevision = 0" in view_controller and
+            -1 not in (schedule_request_start, schedule_request_increment, schedule_origin_capture,
+                       schedule_direction_capture, schedule_request_capture, schedule_api_call) and
+            schedule_request_start < schedule_request_increment < schedule_origin_capture <
+            schedule_direction_capture < schedule_request_capture < schedule_api_call and
             "let requestedDirectionRevision = directionRevision" in view_controller and
             "API.sharedInstance.getTimes(from: requestedFrom) { [weak self]" in view_controller and
             "DispatchQueue.main.async" in view_controller and
@@ -335,14 +347,17 @@ def main():
             "acceptsFerryScheduleResponse(" in view_controller and
             "true || acceptsFerryScheduleResponse(" not in view_controller and
             "requestedDirectionRevision: requestedDirectionRevision" in view_controller and
+            "requestedScheduleRequestRevision: requestedScheduleRequestRevision" in view_controller and
             "currentDirectionRevision: viewController.directionRevision" in view_controller and
+            "currentScheduleRequestRevision: viewController.scheduleRequestRevision" in view_controller and
             "viewController.tableView.reloadData()" in view_controller,
-            "schedule API callback must reject stale direction revisions and update table state on the main queue without retaining the view controller",
+            "schedule API callback must reject stale direction and request revisions and update table state on the main queue without retaining the view controller",
             failures)
     require('requestedFrom == "Larkspur" || requestedFrom == "San Francisco"' in schedule_response_policy and
             "requestedFrom == currentFrom" in schedule_response_policy and
-            "requestedDirectionRevision == currentDirectionRevision" in schedule_response_policy,
-            "production schedule response policy must require a known matching origin and revision",
+            "requestedDirectionRevision == currentDirectionRevision" in schedule_response_policy and
+            "requestedScheduleRequestRevision == currentScheduleRequestRevision" in schedule_response_policy,
+            "production schedule response policy must require a known matching origin, direction revision, and request revision",
             failures)
     runner_contract = (
         "Larkspur Ferry/ScheduleResponsePolicy.swift",
@@ -359,15 +374,27 @@ def main():
         'false, "changed origin"',
         'false, "reverse changed origin"',
         'false, "tap-away-and-back stale response"',
-        'false, "newer same-origin request"',
+        'false, "newer same-origin direction request"',
+        'false, "newer same-origin schedule request"',
         'false, "empty origin"',
         'false, "unknown origin"',
     )
     require(all(schedule_response_tests.count(fragment) == 1 for fragment in test_contract),
-            "executable schedule response tests must preserve all eight behavioral cases",
+            "executable schedule response tests must preserve all nine behavioral cases",
             failures)
     require("requestedRevision == currentRevision" in location_response_policy,
             "production location response policy must require the current request revision",
+            failures)
+    require("latitude.isFinite && longitude.isFinite" in location_response_policy and
+            "(-90.0...90.0).contains(latitude)" in location_response_policy and
+            "(-180.0...180.0).contains(longitude)" in location_response_policy,
+            "production location policy must reject non-finite and out-of-range coordinates",
+            failures)
+    coordinate_guard_index = api.find("isValidFerryCoordinate(latitude: lat, longitude: lng)")
+    location_creation_index = api.find("CLLocation(latitude: lat, longitude: lng)")
+    require(coordinate_guard_index != -1 and location_creation_index != -1 and
+            coordinate_guard_index < location_creation_index,
+            "ferry API must validate parsed coordinates before CLLocation creation",
             failures)
     location_runner_contract = (
         "Larkspur Ferry/LocationResponsePolicy.swift",
@@ -387,6 +414,22 @@ def main():
     )
     require(all(location_response_tests.count(fragment) == 1 for fragment in location_test_contract),
             "executable location response tests must preserve all five revision cases",
+            failures)
+    coordinate_test_contract = (
+        'true, "normal ferry coordinate"',
+        'true, "minimum coordinate boundaries"',
+        'true, "maximum coordinate boundaries"',
+        'false, "latitude below minimum"',
+        'false, "latitude above maximum"',
+        'false, "longitude below minimum"',
+        'false, "longitude above maximum"',
+        'false, "NaN latitude"',
+        'false, "NaN longitude"',
+        'false, "infinite latitude"',
+        'false, "infinite longitude"',
+    )
+    require(all(location_response_tests.count(fragment) == 1 for fragment in coordinate_test_contract),
+            "executable location response tests must preserve all coordinate domain cases",
             failures)
     require('dateFormatter.locale = Locale(identifier: "en_US_POSIX")' in view_controller,
             "schedule time parsing must use a POSIX locale for fixed-format API times",
@@ -617,7 +660,7 @@ def main():
             "## Verification Completed" in schedule_response_plan and
             "all four make gates passed" in normalized_verification and
             "external absolute makefile gate passed" in normalized_verification and
-            "eight hostile mutations were rejected" in normalized_verification and
+            "nine hostile mutations were rejected" in normalized_verification and
             "hosted pull-request check" in normalized_verification and
             not re.search(r"\b(?:pending|todo|tbd|not run|not yet)\b", verification, re.IGNORECASE),
             "schedule response revision plan must retain completed verification evidence",
@@ -655,6 +698,9 @@ def main():
             failures)
     require("locale-independent coordinate parsing" in changes.lower(),
             "CHANGES must record locale-independent coordinate parsing",
+            failures)
+    require("finite coordinate domain validation" in changes.lower(),
+            "CHANGES must record finite coordinate domain validation",
             failures)
     require("posix schedule time parsing" in changes.lower(),
             "CHANGES must record POSIX schedule time parsing",
@@ -741,6 +787,12 @@ def main():
             "git diff --check" in stale_geocode_plan,
             "stale geocode direction plan must record completed gate and mutation verification",
             failures)
+    require("status: completed" in coordinate_domain_plan and
+            "Verification Completed" in coordinate_domain_plan and
+            "isolated hostile mutations" in coordinate_domain_plan.lower() and
+            "external" in coordinate_domain_plan.lower(),
+            "coordinate domain validation plan must record completed verification",
+            failures)
     require("in-flight map response" in readme.lower() and
             "in-flight ferry location responses" in changes.lower(),
             "README and CHANGES must document off-screen map response rejection",
@@ -763,8 +815,10 @@ def main():
             failures)
     require(checkout_step is not None and
             actions == ["actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10"] and
+            workflow.count("permissions:") == 1 and
             workflow.count("persist-credentials:") == 1 and
             "persist-credentials: true" not in workflow and
+            re.search(r"(?m)^\s+[A-Za-z-]+:\s+write\s*$", workflow) is None and
             "permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
             "runs-on: macos-15" in workflow and "timeout-minutes: 10" in workflow and
             'SKIP_XCODE_BUILD: "1"' in workflow and
