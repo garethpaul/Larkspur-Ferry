@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs/plans/2026-06-08-larkspur-ferry-baseline.md"
 MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-09-main-thread-ui-updates.md"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
-EXPECTED_MAKEFILE = """ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+EXPECTED_MAKEFILE = """override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 SWIFTC ?= swiftc
 
 .PHONY: build check lint test
