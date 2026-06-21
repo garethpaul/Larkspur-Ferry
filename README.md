@@ -95,7 +95,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   guardrails, project metadata, and documentation contracts.
 - The Make gates are location-independent. From another directory, pass the
   checkout's Makefile by absolute path, such as
-  `make -f /path/to/Larkspur-Ferry/Makefile check`.
+  `make -f /path/to/Larkspur-Ferry/Makefile check`. This remains supported when
+  checkout paths contain spaces or a literal apostrophe. `ROOT` and
+  `MAKEFILE_LIST` overrides cannot redirect verification into another tree.
 - The `lint`, `test`, and `build` targets intentionally alias the existing
   check path so the standard local gate commands stay available while preserving
   the guarded CocoaPods/Xcode skip behavior on hosts without that toolchain.
