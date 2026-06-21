@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import json
+import os
 import plistlib
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 
 
@@ -13,7 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs/plans/2026-06-08-larkspur-ferry-baseline.md"
 MAIN_THREAD_PLAN = ROOT / "docs/plans/2026-06-09-main-thread-ui-updates.md"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
-EXPECTED_MAKEFILE = """override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+EXPECTED_MAKEFILE = """ifneq ($(origin MAKEFILE_LIST),file)
+$(error MAKEFILE_LIST must not be overridden)
+endif
+override ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$${path\\# }; dirname -- "$$path")
 SWIFTC ?= swiftc
 
 .PHONY: build check lint test
@@ -87,6 +92,59 @@ def git_ls_files():
     return set(result.stdout.splitlines())
 
 
+def check_makefile_path_resolution(makefile, failures):
+    if not shutil.which("make"):
+        failures.append("make must be available to verify location-independent gates")
+        return
+
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        temporary_root = Path(temporary_directory)
+        checkout = temporary_root / "checkout with spaces 'quoted' [hostile]"
+        external = temporary_root / "external caller"
+        checkout.mkdir()
+        external.mkdir()
+        (checkout / "Makefile").write_text(makefile, encoding="utf-8")
+
+        for target in ("check", "lint", "test", "build"):
+            for extra_arguments in ((), ("ROOT=/tmp/untrusted",), ("-e", "ROOT=/tmp/untrusted")):
+                result = subprocess.run(
+                    ["make", "--dry-run", "-f", str(checkout / "Makefile"),
+                     *extra_arguments, target],
+                    cwd=external,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                require(result.returncode == 0 and
+                        str(checkout / "scripts/check-baseline.py") in result.stdout and
+                        'cd "{}"'.format(checkout) in result.stdout and
+                        "/tmp/untrusted/" not in result.stdout,
+                        "Make aliases must preserve a spaced checkout root and reject ROOT overrides",
+                        failures)
+
+        environment = os.environ.copy()
+        environment["MAKEFILE_LIST"] = "/tmp/untrusted"
+        attacks = (
+            (["make", "--dry-run", "-f", str(checkout / "Makefile"),
+              "MAKEFILE_LIST=/tmp/untrusted", "check"], None),
+            (["make", "-e", "--dry-run", "-f", str(checkout / "Makefile"), "check"],
+             environment),
+        )
+        for command, attack_environment in attacks:
+            result = subprocess.run(
+                command,
+                cwd=external,
+                env=attack_environment,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            require(result.returncode != 0 and
+                    "MAKEFILE_LIST must not be overridden" in result.stderr,
+                    "Makefile must fail closed when MAKEFILE_LIST is overridden",
+                    failures)
+
+
 def main():
     failures = []
     required_files = [
@@ -123,6 +181,7 @@ def main():
         "docs/plans/2026-06-16-schedule-response-revision-policy.md",
         "docs/plans/2026-06-17-location-response-revision-policy.md",
         "docs/plans/2026-06-17-ferry-coordinate-domain-validation.md",
+        "docs/plans/2026-06-21-spaced-makefile-path.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -227,6 +286,7 @@ def main():
     schedule_response_plan = read("docs/plans/2026-06-16-schedule-response-revision-policy.md")
     location_response_plan = read("docs/plans/2026-06-17-location-response-revision-policy.md")
     coordinate_domain_plan = read("docs/plans/2026-06-17-ferry-coordinate-domain-validation.md")
+    spaced_make_plan = read("docs/plans/2026-06-21-spaced-makefile-path.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -267,6 +327,7 @@ def main():
     require(makefile == EXPECTED_MAKEFILE,
             "Makefile must exactly preserve rooted standard gates and the guarded build script",
             failures)
+    check_makefile_path_resolution(makefile, failures)
 
     require(app_plist.get("NSLocationWhenInUseUsageDescription"),
             "app Info.plist must document when-in-use location permission",
@@ -720,6 +781,9 @@ def main():
     require("make -f /path/to/Larkspur-Ferry/Makefile check" in readme,
             "README must document location-independent Makefile invocation",
             failures)
+    require("paths contain spaces" in readme and "MAKEFILE_LIST" in readme,
+            "README must document spaced paths and protected Makefile metadata",
+            failures)
     require("status: completed" in plan,
             "plan must be marked completed",
             failures)
@@ -768,6 +832,11 @@ def main():
             "root and external-directory" in location_independent_make_plan and
             "six isolated hostile mutations" in location_independent_make_plan,
             "location-independent Make plan must record completed root, external, and mutation verification",
+            failures)
+    require("status: completed" in spaced_make_plan and
+            "literal apostrophe" in spaced_make_plan and
+            "MAKEFILE_LIST" in spaced_make_plan,
+            "spaced Makefile path plan must record completed hostile-path verification",
             failures)
     require("status: completed" in visible_map_plan and
             "hostile mutations" in visible_map_plan and
