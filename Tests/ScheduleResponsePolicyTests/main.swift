@@ -33,6 +33,31 @@ expect("Larkspur", 6, 11, "Larkspur", 6, 12, false, "newer same-origin schedule 
 expect("", 0, 1, "", 0, 1, false, "empty origin")
 expect("Sausalito", 2, 4, "Sausalito", 2, 4, false, "unknown origin")
 
+private func expectPublishedItems(_ currentItems: [Int],
+                                  _ responseItems: [Int]?,
+                                  _ acceptsResponse: Bool,
+                                  _ expectedItems: [Int],
+                                  _ message: String) {
+    var actualItems = currentItems
+    if let itemsToPublish = ferryScheduleItemsToPublish(
+        responseItems: responseItems,
+        acceptsResponse: acceptsResponse
+        ) {
+        actualItems = itemsToPublish
+    }
+
+    if actualItems != expectedItems {
+        failureCount += 1
+        print("FAIL: \(message): expected \(expectedItems), got \(actualItems)")
+    }
+}
+
+expectPublishedItems([9], [1, 2], true, [1, 2], "current nonempty success publishes")
+expectPublishedItems([9], [], true, [], "current empty success publishes")
+expectPublishedItems([9], nil, true, [9], "current failure preserves existing rows")
+expectPublishedItems([9], [3], false, [9], "stale success does not publish")
+expectPublishedItems([9], nil, false, [9], "stale failure does not publish")
+
 if failureCount > 0 {
     fatalError("ScheduleResponsePolicy behavioral tests failed: \(failureCount)")
 }
