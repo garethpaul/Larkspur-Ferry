@@ -38,26 +38,28 @@ final class API {
     }
     
     // MARK: Helper for Ferry
-    func getTimes(from: String, completion: @escaping ([Ferry]) -> Void) {
+    func getTimes(from: String, completion: @escaping ([Ferry]?) -> Void) {
         // Get the ferry from ...
         get(endpoint: "ferry/larkspur", parameters: ["from": from as AnyObject]) { JSON in
-            
-            var boats: [Ferry] = []
-            if let result = JSON as? JSONArray {
-                for item in result {
-                    guard let arrive = item["arrive"] as? String,
-                        let depart = item["depart"] as? String,
-                        let fromLocation = item["from"] as? String,
-                        let toLocation = item["to"] as? String else {
-                            continue
-                    }
+            guard let result = JSON as? JSONArray else {
+                completion(nil)
+                return
+            }
 
-                    let ferryBoat = Ferry(arrive: arrive,
-                                          depart: depart,
-                                          from: fromLocation,
-                                          to: toLocation)
-                    boats.append(ferryBoat)
+            var boats: [Ferry] = []
+            for item in result {
+                guard let arrive = item["arrive"] as? String,
+                    let depart = item["depart"] as? String,
+                    let fromLocation = item["from"] as? String,
+                    let toLocation = item["to"] as? String else {
+                        continue
                 }
+
+                let ferryBoat = Ferry(arrive: arrive,
+                                      depart: depart,
+                                      from: fromLocation,
+                                      to: toLocation)
+                boats.append(ferryBoat)
             }
 
             completion(boats)

@@ -42,6 +42,90 @@ def require(condition, message, failures):
         failures.append(message)
 
 
+def check_schedule_publication_contract(api, view_controller, schedule_response_policy, failures):
+    require("func getTimes(from: String, completion: @escaping ([Ferry]?) -> Void)" in api,
+            "schedule API completion must distinguish failure from a successful empty schedule",
+            failures)
+    require("guard let result = JSON as? JSONArray else {" in api and
+            "completion(nil)" in api and
+            api.find("guard let result = JSON as? JSONArray else {") < api.find("var boats: [Ferry] = []"),
+            "schedule API must report transport or top-level parse failure as nil before parsing rows",
+            failures)
+    require("func ferryScheduleItemsToPublish<Item>(responseItems: [Item]?," in schedule_response_policy and
+            "guard acceptsResponse else {" in schedule_response_policy and
+            "publishedFrom == requestedFrom" in schedule_response_policy and
+            "return []" in schedule_response_policy,
+            "schedule publication policy must preserve only same-origin failures",
+            failures)
+    require("let acceptsResponse = acceptsFerryScheduleResponse(" in view_controller and
+            "guard let boatsToPublish = ferryScheduleItemsToPublish(" in view_controller and
+            "responseItems: boats" in view_controller and
+            "acceptsResponse: acceptsResponse" in view_controller and
+            "requestedFrom: requestedFrom" in view_controller and
+            "publishedFrom: viewController.publishedScheduleFrom" in view_controller and
+            "viewController.items = boatsToPublish" in view_controller and
+            "viewController.publishedScheduleFrom = requestedFrom" in view_controller,
+            "schedule callback must track which origin owns displayed rows",
+            failures)
+
+
+def check_schedule_publication_mutations(api, view_controller, schedule_response_policy, failures):
+    mutations = [
+        (
+            "nonoptional schedule completion",
+            api.replace("([Ferry]?) -> Void", "([Ferry]) -> Void", 1),
+            view_controller,
+            schedule_response_policy,
+        ),
+        (
+            "collapsed top-level parse failure",
+            api.replace("guard let result = JSON as? JSONArray else {", "if let result = JSON as? JSONArray {", 1),
+            view_controller,
+            schedule_response_policy,
+        ),
+        (
+            "accepted-response bypass",
+            api,
+            view_controller,
+            schedule_response_policy.replace("guard acceptsResponse else {", "if false {", 1),
+        ),
+        (
+            "cross-origin failure preserved",
+            api,
+            view_controller,
+            schedule_response_policy.replace("return []", "return nil", 1),
+        ),
+        (
+            "failure converted to empty success",
+            api,
+            view_controller.replace(
+                "guard let boatsToPublish = ferryScheduleItemsToPublish(",
+                "let boatsToPublish = boats ?? []\n                if false { ferryScheduleItemsToPublish(",
+                1,
+            ),
+            schedule_response_policy,
+        ),
+        (
+            "direct callback publication",
+            api,
+            view_controller.replace("viewController.items = boatsToPublish", "viewController.items = boats", 1),
+            schedule_response_policy,
+        ),
+    ]
+
+    for name, mutated_api, mutated_view_controller, mutated_policy in mutations:
+        mutation_failures = []
+        check_schedule_publication_contract(
+            mutated_api,
+            mutated_view_controller,
+            mutated_policy,
+            mutation_failures,
+        )
+        require(mutation_failures,
+                "schedule publication source gate accepted mutation: " + name,
+                failures)
+
+
 def read(relative_path):
     return (ROOT / relative_path).read_text(encoding="utf-8", errors="replace")
 
@@ -360,8 +444,10 @@ def main():
             "API location parsing must handle malformed payloads without force unwraps",
             failures)
     require("guard let arrive" in api and "completion(boats)" in api,
-            "API schedule parsing must skip malformed ferry rows and always complete",
+            "API schedule parsing must skip malformed ferry rows and complete successful arrays",
             failures)
+    check_schedule_publication_contract(api, view_controller, schedule_response_policy, failures)
+    check_schedule_publication_mutations(api, view_controller, schedule_response_policy, failures)
     require("parameters?.stringFromHttpParameters() ?? \"\"" in api and "guard let url = URL" in api,
             "API request builder must avoid force-unwrapping parameters and URLs",
             failures)
@@ -439,9 +525,16 @@ def main():
         'false, "newer same-origin schedule request"',
         'false, "empty origin"',
         'false, "unknown origin"',
+        '"current nonempty success publishes"',
+        '"current empty success publishes"',
+        '"same-origin failure preserves existing rows"',
+        '"changed-origin failure clears stale rows"',
+        '"initial failure publishes an empty current schedule"',
+        '"stale success does not publish"',
+        '"stale failure does not publish"',
     )
     require(all(schedule_response_tests.count(fragment) == 1 for fragment in test_contract),
-            "executable schedule response tests must preserve all nine behavioral cases",
+            "executable schedule response tests must preserve revision and publication behavior",
             failures)
     require("requestedRevision == currentRevision" in location_response_policy,
             "production location response policy must require the current request revision",

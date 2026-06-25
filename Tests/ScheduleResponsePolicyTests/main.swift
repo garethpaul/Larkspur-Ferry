@@ -33,6 +33,44 @@ expect("Larkspur", 6, 11, "Larkspur", 6, 12, false, "newer same-origin schedule 
 expect("", 0, 1, "", 0, 1, false, "empty origin")
 expect("Sausalito", 2, 4, "Sausalito", 2, 4, false, "unknown origin")
 
+private func expectPublishedItems(_ currentItems: [Int],
+                                  _ responseItems: [Int]?,
+                                  _ acceptsResponse: Bool,
+                                  _ requestedFrom: String,
+                                  _ publishedFrom: String?,
+                                  _ expectedItems: [Int],
+                                  _ message: String) {
+    var actualItems = currentItems
+    if let itemsToPublish = ferryScheduleItemsToPublish(
+        responseItems: responseItems,
+        acceptsResponse: acceptsResponse,
+        requestedFrom: requestedFrom,
+        publishedFrom: publishedFrom
+        ) {
+        actualItems = itemsToPublish
+    }
+
+    if actualItems != expectedItems {
+        failureCount += 1
+        print("FAIL: \(message): expected \(expectedItems), got \(actualItems)")
+    }
+}
+
+expectPublishedItems([9], [1, 2], true, "Larkspur", "Larkspur", [1, 2],
+                     "current nonempty success publishes")
+expectPublishedItems([9], [], true, "Larkspur", "Larkspur", [],
+                     "current empty success publishes")
+expectPublishedItems([9], nil, true, "Larkspur", "Larkspur", [9],
+                     "same-origin failure preserves existing rows")
+expectPublishedItems([9], nil, true, "San Francisco", "Larkspur", [],
+                     "changed-origin failure clears stale rows")
+expectPublishedItems([9], nil, true, "Larkspur", nil, [],
+                     "initial failure publishes an empty current schedule")
+expectPublishedItems([9], [3], false, "San Francisco", "Larkspur", [9],
+                     "stale success does not publish")
+expectPublishedItems([9], nil, false, "San Francisco", "Larkspur", [9],
+                     "stale failure does not publish")
+
 if failureCount > 0 {
     fatalError("ScheduleResponsePolicy behavioral tests failed: \(failureCount)")
 }

@@ -22,6 +22,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     var directionRevision = 0
     var locationLookupDirectionRevision = 0
     var scheduleRequestRevision = 0
+    var publishedScheduleFrom: String?
     
     var locationUpdated = false
     
@@ -140,19 +141,29 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
         let requestedScheduleRequestRevision = scheduleRequestRevision
         API.sharedInstance.getTimes(from: requestedFrom) { [weak self] (boats) -> Void in
             DispatchQueue.main.async {
-                guard let viewController = self,
-                    acceptsFerryScheduleResponse(
+                guard let viewController = self else {
+                    return
+                }
+
+                let acceptsResponse = acceptsFerryScheduleResponse(
                         requestedFrom: requestedFrom,
                         requestedDirectionRevision: requestedDirectionRevision,
                         requestedScheduleRequestRevision: requestedScheduleRequestRevision,
                         currentFrom: viewController.f,
                         currentDirectionRevision: viewController.directionRevision,
                         currentScheduleRequestRevision: viewController.scheduleRequestRevision
+                    )
+                guard let boatsToPublish = ferryScheduleItemsToPublish(
+                    responseItems: boats,
+                    acceptsResponse: acceptsResponse,
+                    requestedFrom: requestedFrom,
+                    publishedFrom: viewController.publishedScheduleFrom
                     ) else {
                     return
                 }
 
-                viewController.items = boats
+                viewController.items = boatsToPublish
+                viewController.publishedScheduleFrom = requestedFrom
                 viewController.tableView.reloadData()
             }
         }
