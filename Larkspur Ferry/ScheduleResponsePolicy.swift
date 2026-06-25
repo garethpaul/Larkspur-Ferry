@@ -13,10 +13,20 @@ func acceptsFerryScheduleResponse(requestedFrom: String,
 }
 
 func ferryScheduleItemsToPublish<Item>(responseItems: [Item]?,
-                                       acceptsResponse: Bool) -> [Item]? {
+                                       acceptsResponse: Bool,
+                                       requestedFrom: String,
+                                       publishedFrom: String?) -> [Item]? {
     guard acceptsResponse else {
         return nil
     }
 
-    return responseItems
+    if let responseItems = responseItems {
+        return responseItems
+    }
+
+    if publishedFrom == requestedFrom {
+        return nil
+    }
+
+    return []
 }

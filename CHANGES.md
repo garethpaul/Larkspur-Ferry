@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-25
+
+- Distinguished failed schedule requests from successful empty schedules so a
+  same-direction refresh failure preserves visible departures.
+- Tracked which origin owns the displayed schedule so an accepted failure after
+  a direction change clears stale departures from the previous route.
+
 ## 2026-06-21
 
 - Made absolute external Makefile invocations work when checkout paths contain

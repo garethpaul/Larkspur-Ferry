@@ -53,15 +53,19 @@ def check_schedule_publication_contract(api, view_controller, schedule_response_
             failures)
     require("func ferryScheduleItemsToPublish<Item>(responseItems: [Item]?," in schedule_response_policy and
             "guard acceptsResponse else {" in schedule_response_policy and
-            "return responseItems" in schedule_response_policy,
-            "schedule publication policy must publish only accepted successful responses",
+            "publishedFrom == requestedFrom" in schedule_response_policy and
+            "return []" in schedule_response_policy,
+            "schedule publication policy must preserve only same-origin failures",
             failures)
     require("let acceptsResponse = acceptsFerryScheduleResponse(" in view_controller and
             "guard let boatsToPublish = ferryScheduleItemsToPublish(" in view_controller and
             "responseItems: boats" in view_controller and
             "acceptsResponse: acceptsResponse" in view_controller and
-            "viewController.items = boatsToPublish" in view_controller,
-            "schedule callback must preserve rows on failure and publish only accepted successes",
+            "requestedFrom: requestedFrom" in view_controller and
+            "publishedFrom: viewController.publishedScheduleFrom" in view_controller and
+            "viewController.items = boatsToPublish" in view_controller and
+            "viewController.publishedScheduleFrom = requestedFrom" in view_controller,
+            "schedule callback must track which origin owns displayed rows",
             failures)
 
 
@@ -84,6 +88,12 @@ def check_schedule_publication_mutations(api, view_controller, schedule_response
             api,
             view_controller,
             schedule_response_policy.replace("guard acceptsResponse else {", "if false {", 1),
+        ),
+        (
+            "cross-origin failure preserved",
+            api,
+            view_controller,
+            schedule_response_policy.replace("return []", "return nil", 1),
         ),
         (
             "failure converted to empty success",
@@ -517,7 +527,9 @@ def main():
         'false, "unknown origin"',
         '"current nonempty success publishes"',
         '"current empty success publishes"',
-        '"current failure preserves existing rows"',
+        '"same-origin failure preserves existing rows"',
+        '"changed-origin failure clears stale rows"',
+        '"initial failure publishes an empty current schedule"',
         '"stale success does not publish"',
         '"stale failure does not publish"',
     )

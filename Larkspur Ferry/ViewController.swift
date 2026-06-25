@@ -22,6 +22,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
     var directionRevision = 0
     var locationLookupDirectionRevision = 0
     var scheduleRequestRevision = 0
+    var publishedScheduleFrom: String?
     
     var locationUpdated = false
     
@@ -154,12 +155,15 @@ class ViewController: UIViewController, CLLocationManagerDelegate,  UITableViewD
                     )
                 guard let boatsToPublish = ferryScheduleItemsToPublish(
                     responseItems: boats,
-                    acceptsResponse: acceptsResponse
+                    acceptsResponse: acceptsResponse,
+                    requestedFrom: requestedFrom,
+                    publishedFrom: viewController.publishedScheduleFrom
                     ) else {
                     return
                 }
 
                 viewController.items = boatsToPublish
+                viewController.publishedScheduleFrom = requestedFrom
                 viewController.tableView.reloadData()
             }
         }
