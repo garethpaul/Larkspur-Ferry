@@ -2,6 +2,9 @@
 
 ## 2026-06-25
 
+- Documented the legacy transit proxy, schedule and map request cadence,
+  uncached 10-second request boundary, retained-data behavior, and absence of a
+  server timestamp or freshness guarantee.
 - Distinguished failed schedule requests from successful empty schedules so a
   same-direction refresh failure preserves visible departures.
 - Tracked which origin owns the displayed schedule so an accepted failure after
