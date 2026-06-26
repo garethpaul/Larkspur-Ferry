@@ -18,7 +18,7 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 EXPECTED_MAKEFILE = """ifneq ($(origin MAKEFILE_LIST),file)
 $(error MAKEFILE_LIST must not be overridden)
 endif
-override ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$${path\\# }; dirname -- "$$path")
+override ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$$(printf '%s' "$$path" | sed 's/^ //'); dirname -- "$$path")
 SWIFTC ?= swiftc
 
 .PHONY: build check lint test
@@ -27,6 +27,7 @@ lint test build: check
 
 check:
 \t@if command -v "$(SWIFTC)" >/dev/null 2>&1; then \\
+\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-api-base-url-policy-tests.sh"; \\
 \t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-schedule-response-policy-tests.sh"; \\
 \t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-location-response-policy-tests.sh"; \\
 \telse \\
@@ -40,6 +41,94 @@ check:
 def require(condition, message, failures):
     if not condition:
         failures.append(message)
+
+
+def check_api_base_url_contract(policy, api, project, plist_text, makefile,
+                                runner, tests, readme, data_source, vision,
+                                plan, failures):
+    for phrase in [
+        'let ferryAPIBaseURLInfoKey = "FerryAPIBaseURL"',
+        'components.scheme?.lowercased() == "https"',
+        "let host = components.host",
+        "!host.isEmpty",
+        "components.user == nil",
+        "components.password == nil",
+        "components.query == nil",
+        "components.fragment == nil",
+        'components.path.hasSuffix("/")',
+    ]:
+        require(phrase in policy,
+                "API base URL policy must preserve: " + phrase,
+                failures)
+    require("Bundle.main.object(forInfoDictionaryKey: ferryAPIBaseURLInfoKey)" in api and
+            "guard let apiBaseURL = apiBaseURL," in api and
+            "relativeTo: apiBaseURL" in api,
+            "API requests must use only the validated bundle configuration",
+            failures)
+    require("<key>FerryAPIBaseURL</key>" in plist_text and
+            "<string>https://requestlabs.appspot.com/</string>" in plist_text,
+            "app plist must declare the reviewed ferry API base URL",
+            failures)
+    require(project.count("/* APIBaseURLPolicy.swift */") == 3 and
+            project.count("/* APIBaseURLPolicy.swift in Sources */") == 2,
+            "APIBaseURLPolicy.swift must remain a unique app-target source",
+            failures)
+    require("run-api-base-url-policy-tests.sh" in makefile and
+            "Larkspur Ferry/APIBaseURLPolicy.swift" in runner and
+            "Tests/APIBaseURLPolicyTests/main.swift" in runner,
+            "every Make gate must execute the production API base URL policy",
+            failures)
+    for phrase in [
+        "missing configuration",
+        "non-string configuration",
+        "insecure scheme",
+        "missing host",
+        "embedded credentials",
+        "query string",
+        "fragment",
+        "missing trailing slash",
+    ]:
+        require(phrase in tests,
+                "API base URL tests must cover " + phrase,
+                failures)
+    require("FerryAPIBaseURL" in readme and
+            "FerryAPIBaseURL" in data_source and
+            "HTTPS-only" in vision,
+            "project guidance must document validated endpoint configuration",
+            failures)
+    require("status: completed" in plan.lower() and
+            "hostile mutations" in plan.lower() and
+            "all four make gates" in plan.lower(),
+            "API base URL plan must record completed verification",
+            failures)
+
+
+def check_api_base_url_mutations(policy, api, project, plist_text, makefile,
+                                 runner, tests, readme, data_source, vision,
+                                 plan, failures):
+    mutations = [
+        ("insecure scheme", policy.replace('== "https"', '== "http"', 1), api, project, plist_text, makefile, runner),
+        ("missing host guard", policy.replace("!host.isEmpty,", "true,", 1), api, project, plist_text, makefile, runner),
+        ("embedded user allowed", policy.replace("components.user == nil,", "true,", 1), api, project, plist_text, makefile, runner),
+        ("embedded password allowed", policy.replace("components.password == nil,", "true,", 1), api, project, plist_text, makefile, runner),
+        ("query allowed", policy.replace("components.query == nil,", "true,", 1), api, project, plist_text, makefile, runner),
+        ("fragment allowed", policy.replace("components.fragment == nil", "true", 1), api, project, plist_text, makefile, runner),
+        ("bundle lookup bypass", policy, api.replace("Bundle.main.object", "Bundle().object", 1), project, plist_text, makefile, runner),
+        ("plist key removed", policy, api, project, plist_text.replace("FerryAPIBaseURL", "RemovedAPIBaseURL", 1), makefile, runner),
+        ("project source removed", policy, api, project.replace("APIBaseURLPolicy.swift in Sources", "RemovedPolicy.swift in Sources"), plist_text, makefile, runner),
+        ("Make runner removed", policy, api, project, plist_text, makefile.replace("run-api-base-url-policy-tests.sh", "removed-policy-tests.sh", 1), runner),
+    ]
+
+    for name, mutated_policy, mutated_api, mutated_project, mutated_plist, mutated_makefile, mutated_runner in mutations:
+        mutation_failures = []
+        check_api_base_url_contract(
+            mutated_policy, mutated_api, mutated_project, mutated_plist,
+            mutated_makefile, mutated_runner, tests, readme, data_source,
+            vision, plan, mutation_failures,
+        )
+        require(mutation_failures,
+                "API base URL source gate accepted mutation: " + name,
+                failures)
 
 
 def check_schedule_publication_contract(api, view_controller, schedule_response_policy, failures):
@@ -268,6 +357,7 @@ def main():
         "docs/plans/2026-06-17-ferry-coordinate-domain-validation.md",
         "docs/plans/2026-06-21-spaced-makefile-path.md",
         "docs/plans/2026-06-25-transit-data-source-freshness.md",
+        "docs/plans/2026-06-26-configurable-api-base-url.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -277,6 +367,7 @@ def main():
         "Larkspur Ferry.xcodeproj/xcshareddata/xcschemes/Larkspur FerryUITests.xcscheme",
         "Larkspur Ferry/Info.plist",
         "Larkspur Ferry/API.swift",
+        "Larkspur Ferry/APIBaseURLPolicy.swift",
         "Larkspur Ferry/Extensions.swift",
         "Larkspur Ferry/ScheduleResponsePolicy.swift",
         "Larkspur Ferry/LocationResponsePolicy.swift",
@@ -292,8 +383,10 @@ def main():
         "Larkspur FerryUITests/SnapshotHelper.swift",
         "Tests/ScheduleResponsePolicyTests/main.swift",
         "Tests/LocationResponsePolicyTests/main.swift",
+        "Tests/APIBaseURLPolicyTests/main.swift",
         "scripts/run-schedule-response-policy-tests.sh",
         "scripts/run-location-response-policy-tests.sh",
+        "scripts/run-api-base-url-policy-tests.sh",
     ]
 
     for relative_path in required_files:
@@ -327,18 +420,22 @@ def main():
         check_png(image_file, failures)
 
     app_plist = parse_plist("Larkspur Ferry/Info.plist", failures)
+    app_plist_text = read("Larkspur Ferry/Info.plist")
     test_plist = parse_plist("Larkspur FerryUITests/Info.plist", failures)
     project = read("Larkspur Ferry.xcodeproj/project.pbxproj")
     build_script = read("build.sh")
     api = read("Larkspur Ferry/API.swift")
+    api_base_url_policy = read("Larkspur Ferry/APIBaseURLPolicy.swift")
     extensions = read("Larkspur Ferry/Extensions.swift")
     schedule_response_policy = read("Larkspur Ferry/ScheduleResponsePolicy.swift")
     location_response_policy = read("Larkspur Ferry/LocationResponsePolicy.swift")
     view_controller = read("Larkspur Ferry/ViewController.swift")
     schedule_response_tests = read("Tests/ScheduleResponsePolicyTests/main.swift")
     location_response_tests = read("Tests/LocationResponsePolicyTests/main.swift")
+    api_base_url_tests = read("Tests/APIBaseURLPolicyTests/main.swift")
     schedule_response_runner = read("scripts/run-schedule-response-policy-tests.sh")
     location_response_runner = read("scripts/run-location-response-policy-tests.sh")
+    api_base_url_runner = read("scripts/run-api-base-url-policy-tests.sh")
     map_controller = read("Larkspur Ferry/MapViewController.swift")
     pin_annotation = read("Larkspur Ferry/PinAnnotation.swift")
     app_swift = "\n".join(strip_swift_line_comments(path.read_text(encoding="utf-8", errors="replace"))
@@ -376,6 +473,7 @@ def main():
     spaced_make_plan = read("docs/plans/2026-06-21-spaced-makefile-path.md")
     data_source_plan_path = ROOT / "docs/plans/2026-06-25-transit-data-source-freshness.md"
     data_source_plan = data_source_plan_path.read_text(encoding="utf-8", errors="replace") if data_source_plan_path.exists() else ""
+    api_base_url_plan = read("docs/plans/2026-06-26-configurable-api-base-url.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -403,6 +501,16 @@ def main():
     )
     require(location_runner_shell_result.returncode == 0,
             "location response runner must pass POSIX shell syntax checks: " + location_runner_shell_result.stderr.strip(),
+            failures)
+    api_base_url_runner_shell_result = subprocess.run(
+        ["sh", "-n", "scripts/run-api-base-url-policy-tests.sh"],
+        cwd=str(ROOT),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    require(api_base_url_runner_shell_result.returncode == 0,
+            "API base URL runner must pass POSIX shell syntax checks: " + api_base_url_runner_shell_result.stderr.strip(),
             failures)
     require("function ci_build" not in build_script and "ci_build() {" in build_script and "ci_test() {" in build_script,
             "build.sh must use POSIX-compatible shell function syntax",
@@ -438,12 +546,23 @@ def main():
             project.count("/* LocationResponsePolicy.swift in Sources */") == 2,
             "LocationResponsePolicy.swift must remain a unique app-target source",
             failures)
+    check_api_base_url_contract(
+        api_base_url_policy, api, project, app_plist_text, makefile,
+        api_base_url_runner, api_base_url_tests, readme, data_source, vision,
+        api_base_url_plan, failures,
+    )
+    check_api_base_url_mutations(
+        api_base_url_policy, api, project, app_plist_text, makefile,
+        api_base_url_runner, api_base_url_tests, readme, data_source, vision,
+        api_base_url_plan, failures,
+    )
     require("Alamofire', '~> 4.0'" in podfile and "Alamofire (4.3.0)" in podlock,
             "Podfile and lockfile must preserve the pinned Alamofire baseline",
             failures)
 
-    require('private let apiBaseURL = "https://requestlabs.appspot.com/"' in api,
-            "API base URL must remain HTTPS and visible",
+    require("validatedFerryAPIBaseURL(" in api and
+            app_plist.get("FerryAPIBaseURL") == "https://requestlabs.appspot.com/",
+            "API base URL must remain HTTPS, configured, and visible",
             failures)
     require("completion(nil)" in api and "guard let result = JSON as? JSONObject" in api,
             "API location parsing must handle malformed payloads without force unwraps",
@@ -453,7 +572,8 @@ def main():
             failures)
     check_schedule_publication_contract(api, view_controller, schedule_response_policy, failures)
     check_schedule_publication_mutations(api, view_controller, schedule_response_policy, failures)
-    require("parameters?.stringFromHttpParameters() ?? \"\"" in api and "guard let url = URL" in api,
+    require("parameters?.stringFromHttpParameters() ?? \"\"" in api and
+            "let url = URL(string: endpoint + querySuffix, relativeTo: apiBaseURL)?.absoluteURL" in api,
             "API request builder must avoid force-unwrapping parameters and URLs",
             failures)
     require("private let requestTimeout: TimeInterval = 10" in api and

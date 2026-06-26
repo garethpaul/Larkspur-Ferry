@@ -1,10 +1,11 @@
 # Transit Data Source And Freshness
 
 This repository is a legacy sample. Its checked-in `API.swift` sends requests
-to `https://requestlabs.appspot.com/`, a project-specific proxy endpoint that
-is not identified in this repository as an official Golden Gate Ferry data
-source. The repository does not identify the proxy's upstream provider, update
-process, owner, service-level expectations, or continued availability.
+to the `FerryAPIBaseURL` value in `Larkspur Ferry/Info.plist`. The checked-in
+value is `https://requestlabs.appspot.com/`, a project-specific proxy endpoint
+that is not identified in this repository as an official Golden Gate Ferry
+data source. The repository does not identify the proxy's upstream provider,
+update process, owner, service-level expectations, or continued availability.
 
 ## Request Surfaces
 
@@ -39,6 +40,9 @@ Do not use this app for operational, safety-critical, or accessibility planning.
 
 ## Maintenance Rules
 
+- Keep `FerryAPIBaseURL` absolute, HTTPS-only, credential-free, and free of a
+  query string or fragment. Invalid or missing configuration stops requests
+  before Alamofire is called.
 - Document any endpoint, response-shape, polling, timeout, caching, or retained
   data change in this file and `CHANGES.md`.
 - Keep source attribution factual; do not present the legacy proxy as an
