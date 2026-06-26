@@ -33,8 +33,10 @@ publication behavior.
 - `python3 -m py_compile scripts/check-baseline.py`, the guarded
   `SKIP_XCODE_BUILD=1 ./build.sh` path, and `git diff --check` passed locally.
 - This Linux host has neither `swiftc` nor Xcode and retains the repository's
-  pre-existing `/bin/sh` Make-root incompatibility. Exact-head hosted macOS
-  `make check` is required before merge.
+  pre-existing `/bin/sh` Make-root incompatibility.
+- Exact-head hosted macOS `make check` passed on both push and pull-request
+  runs, including the Swift policy harnesses, static baseline, and guarded
+  legacy build boundary. CodeQL Actions and Python analysis also passed.
 
 ## Residual Risk
 
