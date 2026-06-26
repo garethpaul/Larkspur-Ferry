@@ -22,6 +22,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 - `Podfile.lock` - Apple platform dependency metadata
 - `scripts/check-baseline.py` - static Swift/API/location baseline checks
 - `SECURITY.md` - security reporting and disclosure guidance
+- `DATA_SOURCE.md` - current transit endpoint and freshness boundaries
 - `VISION.md` - project direction and maintenance guardrails
 
 Additional scan context:
@@ -58,6 +59,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Open `Larkspur Ferry.xcworkspace` in Xcode after `pod install`, choose the app or sample scheme, and run it on the matching simulator/device.
 - Run `./build.sh` when the required platform toolchain is installed.
+- Read [`DATA_SOURCE.md`](DATA_SOURCE.md) before relying on displayed schedule
+  or ferry-location data. The checked-in legacy proxy is not documented as an
+  official source, exposes no server timestamp, and provides no freshness
+  guarantee.
 - `build.sh` skips cleanly on hosts without CocoaPods or Xcode so static checks can run on non-macOS machines.
 - The map refresh timer starts while the map screen is visible and is invalidated when the screen disappears.
 - An in-flight map response is discarded after the map screen disappears, so

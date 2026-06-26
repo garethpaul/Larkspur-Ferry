@@ -236,6 +236,7 @@ def main():
         ".github/workflows/check.yml",
         ".travis.yml",
         "CHANGES.md",
+        "DATA_SOURCE.md",
         "Makefile",
         "Podfile",
         "Podfile.lock",
@@ -266,6 +267,7 @@ def main():
         "docs/plans/2026-06-17-location-response-revision-policy.md",
         "docs/plans/2026-06-17-ferry-coordinate-domain-validation.md",
         "docs/plans/2026-06-21-spaced-makefile-path.md",
+        "docs/plans/2026-06-25-transit-data-source-freshness.md",
         "docs/readme-overview.svg",
         "Screenshots/screenshot01.png",
         "Larkspur Ferry.xcworkspace/contents.xcworkspacedata",
@@ -345,6 +347,7 @@ def main():
     vision = read("VISION.md")
     security = read("SECURITY.md")
     changes = read("CHANGES.md")
+    data_source = read("DATA_SOURCE.md") if (ROOT / "DATA_SOURCE.md").exists() else ""
     makefile = read("Makefile")
     overview = read("docs/readme-overview.svg")
     gitignore = read(".gitignore")
@@ -371,6 +374,8 @@ def main():
     location_response_plan = read("docs/plans/2026-06-17-location-response-revision-policy.md")
     coordinate_domain_plan = read("docs/plans/2026-06-17-ferry-coordinate-domain-validation.md")
     spaced_make_plan = read("docs/plans/2026-06-21-spaced-makefile-path.md")
+    data_source_plan_path = ROOT / "docs/plans/2026-06-25-transit-data-source-freshness.md"
+    data_source_plan = data_source_plan_path.read_text(encoding="utf-8", errors="replace") if data_source_plan_path.exists() else ""
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -958,6 +963,31 @@ def main():
     require("in-flight map response" in readme.lower() and
             "in-flight ferry location responses" in changes.lower(),
             "README and CHANGES must document off-screen map response rejection",
+            failures)
+    normalized_data_source = " ".join(data_source.split())
+    for phrase in [
+        "https://requestlabs.appspot.com/",
+        "ferry/larkspur?from=",
+        "ferry/location?t=1",
+        "not identified in this repository as an official Golden Gate Ferry data source",
+        "reloadIgnoringLocalCacheData",
+        "10-second request timeout",
+        "every 30 seconds while the map is visible",
+        "does not expose a server timestamp",
+        "no freshness guarantee",
+        "verify current service information independently before travel",
+    ]:
+        require(phrase.lower() in normalized_data_source.lower(),
+                f"DATA_SOURCE.md must document {phrase}", failures)
+    require("[`DATA_SOURCE.md`](DATA_SOURCE.md)" in readme,
+            "README must link the transit data source guide", failures)
+    require("Document current transit-data source and freshness expectations" not in vision,
+            "VISION must not retain the completed transit-data documentation priority",
+            failures)
+    require("status: completed" in data_source_plan.lower() and
+            "make check" in data_source_plan.lower() and
+            "hostile documentation mutations" in data_source_plan.lower(),
+            "transit data source plan must record completed verification",
             failures)
     workflow_files = sorted(
         path.relative_to(ROOT).as_posix()

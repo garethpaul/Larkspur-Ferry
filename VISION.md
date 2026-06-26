@@ -24,6 +24,9 @@ Priority:
 
 - Preserve ferry schedule and map-location flows
 - Keep API endpoint behavior visible and documented
+- Keep the legacy transit proxy, request cadence, retained-data behavior, and
+  lack of a server timestamp documented without implying official or real-time
+  data
 - Validate successful JSON ferry responses with a 10-second uncached request
 - Keep API request construction on deterministic query parameter ordering
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
@@ -58,7 +61,8 @@ Next priorities:
 - Move API base URL into documented configuration
 - Add tests or fixtures for schedule parsing and location handling
 - Modernize Swift, Alamofire, and project settings in a dedicated pass
-- Document current transit-data source and freshness expectations
+- Require endpoint or refresh changes to update the transit-data source and
+  freshness contract
 
 Contribution rules:
 
