@@ -63,6 +63,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   or ferry-location data. The checked-in legacy proxy is not documented as an
   official source, exposes no server timestamp, and provides no freshness
   guarantee.
+- Configure that proxy through the `FerryAPIBaseURL` key in
+  `Larkspur Ferry/Info.plist`. The app accepts only an absolute HTTPS URL with a
+  host and no embedded credentials, query string, or fragment; missing or
+  invalid configuration fails closed before Alamofire request construction.
 - `build.sh` skips cleanly on hosts without CocoaPods or Xcode so static checks can run on non-macOS machines.
 - The map refresh timer starts while the map screen is visible and is invalidated when the screen disappears.
 - An in-flight map response is discarded after the map screen disappears, so

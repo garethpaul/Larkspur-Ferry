@@ -1,5 +1,17 @@
 # Changes
 
+## 2026-06-26
+
+- Moved the ferry API base URL from a private Swift literal into the checked-in
+  `FerryAPIBaseURL` plist setting while preserving the current proxy endpoint.
+- Added a fail-closed URL policy and executable Swift coverage for missing,
+  blank, non-string, insecure, hostless, credential-bearing, query-bearing,
+  fragment-bearing, whitespace-padded, and missing-slash configuration values.
+- Wired the policy into the app target and every Make verification alias, and
+  documented the endpoint configuration and transit-data maintenance rules.
+- Repaired the existing Make root resolver so its apostrophe-path contract runs
+  under POSIX shells instead of emitting a bad-substitution error.
+
 ## 2026-06-25
 
 - Documented the legacy transit proxy, schedule and map request cadence,

@@ -13,10 +13,11 @@ Project context lives in [`README.md`](README.md).
 The goal is to keep the app useful, verifiable, and clear about its data source.
 
 Current baseline: `make lint`, `make test`, `make build`, and `make check` run
-the revision-aware schedule response harness, `scripts/check-baseline.py`, and
-the guarded `build.sh` path to verify the production callback decision, build
-script, CocoaPods metadata, Swift API parsing, single-shot location fallbacks,
-project assets, generated metadata ignores, and documentation.
+the API base URL, schedule response, and location response Swift harnesses,
+`scripts/check-baseline.py`, and the guarded `build.sh` path to verify the
+production callback decisions, build script, CocoaPods metadata, Swift API
+parsing, single-shot location fallbacks, project assets, generated metadata
+ignores, and documentation.
 
 The current focus is:
 
@@ -55,10 +56,11 @@ Priority:
   `SKIP_XCODE_BUILD=1` legacy-build boundary
 - Maintain screenshot, build script, and UI test context
 - Avoid committing private endpoints, keys, or generated signing files
+- Keep the configured ferry API base URL HTTPS-only, credential-free, and
+  covered by the standalone Swift policy harness
 
 Next priorities:
 
-- Move API base URL into documented configuration
 - Add tests or fixtures for schedule parsing and location handling
 - Modernize Swift, Alamofire, and project settings in a dedicated pass
 - Require endpoint or refresh changes to update the transit-data source and

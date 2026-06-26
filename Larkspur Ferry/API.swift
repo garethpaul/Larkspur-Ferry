@@ -16,7 +16,9 @@ private typealias JSONObject = NSDictionary
 // MARK: API class to hold API requests
 final class API {
     static let sharedInstance = API()
-    private let apiBaseURL = "https://requestlabs.appspot.com/"
+    private let apiBaseURL = validatedFerryAPIBaseURL(
+        Bundle.main.object(forInfoDictionaryKey: ferryAPIBaseURLInfoKey)
+    )
     private let requestTimeout: TimeInterval = 10
     
     // MARK: Helper for Ferry
@@ -93,7 +95,8 @@ final class API {
         let parameterString = parameters?.stringFromHttpParameters() ?? ""
         let querySuffix = parameterString.isEmpty ? "" : "?\(parameterString)"
 
-        guard let url = URL(string: apiBaseURL + endpoint + querySuffix) else {
+        guard let apiBaseURL = apiBaseURL,
+            let url = URL(string: endpoint + querySuffix, relativeTo: apiBaseURL)?.absoluteURL else {
             completion(nil)
             return
         }
