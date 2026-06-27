@@ -29,6 +29,8 @@ Priority:
   lack of a server timestamp documented without implying official or real-time
   data
 - Validate successful JSON ferry responses with a 10-second uncached request
+- Treat an all-malformed schedule response as failure while preserving genuine
+  empty arrays and valid rows from mixed payloads
 - Keep API request construction on deterministic query parameter ordering
 - Keep locale-independent coordinate parsing for ferry API latitude and longitude values
 - Reject non-finite and out-of-range ferry coordinates before MapKit publication
@@ -61,7 +63,7 @@ Priority:
 
 Next priorities:
 
-- Add tests or fixtures for schedule parsing and location handling
+- Add further fixtures for location payload handling
 - Modernize Swift, Alamofire, and project settings in a dedicated pass
 - Require endpoint or refresh changes to update the transit-data source and
   freshness contract

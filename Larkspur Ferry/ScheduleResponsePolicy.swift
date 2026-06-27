@@ -30,3 +30,14 @@ func ferryScheduleItemsToPublish<Item>(responseItems: [Item]?,
 
     return []
 }
+
+func acceptsParsedFerrySchedule(originalRowCount: Int,
+                                parsedRowCount: Int) -> Bool {
+    guard originalRowCount >= 0,
+        parsedRowCount >= 0,
+        parsedRowCount <= originalRowCount else {
+        return false
+    }
+
+    return originalRowCount == 0 || parsedRowCount > 0
+}

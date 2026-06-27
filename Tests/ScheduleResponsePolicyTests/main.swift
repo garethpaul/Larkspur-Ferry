@@ -71,6 +71,29 @@ expectPublishedItems([9], [3], false, "San Francisco", "Larkspur", [9],
 expectPublishedItems([9], nil, false, "San Francisco", "Larkspur", [9],
                      "stale failure does not publish")
 
+private func expectParsedSchedule(_ originalRowCount: Int,
+                                  _ parsedRowCount: Int,
+                                  _ expected: Bool,
+                                  _ message: String) {
+    let actual = acceptsParsedFerrySchedule(
+        originalRowCount: originalRowCount,
+        parsedRowCount: parsedRowCount
+    )
+
+    if actual != expected {
+        failureCount += 1
+        print("FAIL: \(message): expected \(expected), got \(actual)")
+    }
+}
+
+expectParsedSchedule(0, 0, true, "empty provider schedule")
+expectParsedSchedule(2, 2, true, "all valid provider rows")
+expectParsedSchedule(3, 1, true, "mixed provider rows retain valid entries")
+expectParsedSchedule(2, 0, false, "all malformed provider rows")
+expectParsedSchedule(-1, 0, false, "negative original row count")
+expectParsedSchedule(1, -1, false, "negative parsed row count")
+expectParsedSchedule(1, 2, false, "parsed rows exceed original rows")
+
 if failureCount > 0 {
     fatalError("ScheduleResponsePolicy behavioral tests failed: \(failureCount)")
 }

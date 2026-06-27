@@ -28,6 +28,8 @@ Helpful reports include:
 - The app uses an HTTPS ferry API endpoint and CoreLocation for in-app direction assistance. API and location failures should fall back without force-unwrapping or app debug logging.
 - Live ferry requests should bypass cached responses, use a 10-second timeout,
   and validate HTTP success plus `application/json` before parsing.
+- An all-malformed schedule response must fail closed rather than clear valid
+  displayed departures as though the provider returned a genuine empty array.
 - Deterministic query parameter encoding should run after percent encoding so request construction is stable during review.
 - Locale-independent coordinate parsing should handle ferry API latitude and longitude strings consistently across device regions.
 - Ferry coordinates must be finite and remain within valid latitude and

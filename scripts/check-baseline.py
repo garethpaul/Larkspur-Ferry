@@ -146,6 +146,17 @@ def check_schedule_publication_contract(api, view_controller, schedule_response_
             "return []" in schedule_response_policy,
             "schedule publication policy must preserve only same-origin failures",
             failures)
+    require("func acceptsParsedFerrySchedule(originalRowCount: Int," in schedule_response_policy and
+            "parsedRowCount <= originalRowCount" in schedule_response_policy and
+            "return originalRowCount == 0 || parsedRowCount > 0" in schedule_response_policy,
+            "schedule payload policy must accept empty or partially valid arrays and reject all-malformed arrays",
+            failures)
+    require("guard acceptsParsedFerrySchedule(" in api and
+            "originalRowCount: result.count" in api and
+            "parsedRowCount: boats.count" in api and
+            api.find("guard acceptsParsedFerrySchedule(") < api.find("completion(boats)"),
+            "schedule parsing must reject all-malformed nonempty arrays before reporting success",
+            failures)
     require("let acceptsResponse = acceptsFerryScheduleResponse(" in view_controller and
             "guard let boatsToPublish = ferryScheduleItemsToPublish(" in view_controller and
             "responseItems: boats" in view_controller and
@@ -198,6 +209,22 @@ def check_schedule_publication_mutations(api, view_controller, schedule_response
             "direct callback publication",
             api,
             view_controller.replace("viewController.items = boatsToPublish", "viewController.items = boats", 1),
+            schedule_response_policy,
+        ),
+        (
+            "all-malformed payload accepted",
+            api,
+            view_controller,
+            schedule_response_policy.replace(
+                "return originalRowCount == 0 || parsedRowCount > 0",
+                "return true",
+                1,
+            ),
+        ),
+        (
+            "payload acceptance bypassed",
+            api.replace("guard acceptsParsedFerrySchedule(", "if false && acceptsParsedFerrySchedule(", 1),
+            view_controller,
             schedule_response_policy,
         ),
     ]
@@ -428,9 +455,9 @@ def main():
     api_base_url_policy = read("Larkspur Ferry/APIBaseURLPolicy.swift")
     extensions = read("Larkspur Ferry/Extensions.swift")
     schedule_response_policy = read("Larkspur Ferry/ScheduleResponsePolicy.swift")
+    schedule_response_tests = read("Tests/ScheduleResponsePolicyTests/main.swift")
     location_response_policy = read("Larkspur Ferry/LocationResponsePolicy.swift")
     view_controller = read("Larkspur Ferry/ViewController.swift")
-    schedule_response_tests = read("Tests/ScheduleResponsePolicyTests/main.swift")
     location_response_tests = read("Tests/LocationResponsePolicyTests/main.swift")
     api_base_url_tests = read("Tests/APIBaseURLPolicyTests/main.swift")
     schedule_response_runner = read("scripts/run-schedule-response-policy-tests.sh")
@@ -474,6 +501,7 @@ def main():
     data_source_plan_path = ROOT / "docs/plans/2026-06-25-transit-data-source-freshness.md"
     data_source_plan = data_source_plan_path.read_text(encoding="utf-8", errors="replace") if data_source_plan_path.exists() else ""
     api_base_url_plan = read("docs/plans/2026-06-26-configurable-api-base-url.md")
+    malformed_schedule_plan = read("docs/plans/2026-06-26-all-malformed-schedule-response.md")
     workflow = read(".github/workflows/check.yml")
     annotation_plan_path = ROOT / "docs/plans/2026-06-08-map-annotation-refresh.md"
     annotation_plan = annotation_plan_path.read_text(encoding="utf-8", errors="replace") if annotation_plan_path.exists() else ""
@@ -556,6 +584,11 @@ def main():
         api_base_url_runner, api_base_url_tests, readme, data_source, vision,
         api_base_url_plan, failures,
     )
+    require("status: completed" in malformed_schedule_plan.lower() and
+            "all-malformed" in malformed_schedule_plan.lower() and
+            "make check" in malformed_schedule_plan,
+            "all-malformed schedule response plan must record completed verification",
+            failures)
     require("Alamofire', '~> 4.0'" in podfile and "Alamofire (4.3.0)" in podlock,
             "Podfile and lockfile must preserve the pinned Alamofire baseline",
             failures)
@@ -567,11 +600,24 @@ def main():
     require("completion(nil)" in api and "guard let result = JSON as? JSONObject" in api,
             "API location parsing must handle malformed payloads without force unwraps",
             failures)
-    require("guard let arrive" in api and "completion(boats)" in api,
-            "API schedule parsing must skip malformed ferry rows and complete successful arrays",
+    require("guard let arrive" in api and "completion(boats)" in api and
+            "acceptsParsedFerrySchedule" in api,
+            "API schedule parsing must skip malformed rows without accepting an all-malformed array",
             failures)
     check_schedule_publication_contract(api, view_controller, schedule_response_policy, failures)
     check_schedule_publication_mutations(api, view_controller, schedule_response_policy, failures)
+    require("all malformed provider rows" in schedule_response_tests and
+            "empty provider schedule" in schedule_response_tests and
+            "mixed provider rows retain valid entries" in schedule_response_tests,
+            "schedule policy tests must distinguish empty, partial, and all-malformed arrays",
+            failures)
+    require("all-malformed schedule response" in readme.lower() and
+            "all-malformed schedule response" in security.lower() and
+            "all-malformed schedule response" in vision.lower() and
+            "all-malformed schedule response" in data_source.lower() and
+            "all-malformed schedule response" in changes.lower(),
+            "project guidance must document all-malformed schedule response handling",
+            failures)
     require("parameters?.stringFromHttpParameters() ?? \"\"" in api and
             "let url = URL(string: endpoint + querySuffix, relativeTo: apiBaseURL)?.absoluteURL" in api,
             "API request builder must avoid force-unwrapping parameters and URLs",
