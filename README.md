@@ -82,6 +82,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Schedule table times use POSIX schedule time parsing for fixed-format ferry API values.
 - Live ferry requests bypass cached data, time out after 10 seconds, and accept
   only successful `application/json` responses before parsing.
+- An all-malformed schedule response is treated as a failed request instead of
+  a successful empty schedule; a genuinely empty array remains valid, and
+  mixed arrays retain their valid rows.
 - Schedule table and map API callbacks use main-thread UI updates before
   mutating UIKit or MapKit state.
 - Revision-aware ferry-location callbacks ignore older overlapping responses
@@ -97,7 +100,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - `make lint`, `make test`, `make build`, and `make check` execute the production
-  schedule and ferry-location response policies when `swiftc` is available,
+  schedule parsing/publication and ferry-location response policies when
+  `swiftc` is available,
   then run
   `scripts/check-baseline.py` and the guarded `build.sh` path. The checker
   preserves both executable harnesses, app-target wiring, API and location

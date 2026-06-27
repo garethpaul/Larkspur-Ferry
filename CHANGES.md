@@ -1,5 +1,20 @@
 # Changes
 
+## 2026-06-26 20:42 PDT - P1 - Reject all-malformed schedules
+
+- Prevented a nonempty provider array with zero parseable ferry rows from being
+  reported as a successful empty timetable and clearing valid displayed rows;
+  the all-malformed schedule response now follows the request-failure path.
+- Preserved genuine empty arrays and mixed payloads containing at least one
+  valid ferry row.
+- Added executable schedule policy cases for empty, valid, mixed,
+  all-malformed, negative, and impossible row counts.
+- Added static and hostile mutation coverage for the production parser guard,
+  policy invariant, documentation, and completed implementation plan.
+- Swift 5.10, 6.0, and 6.2 policy execution, the static baseline, all four root
+  Make aliases, and the absolute external Makefile gate pass. Hosted macOS
+  project parsing and CodeQL remain required before merge.
+
 ## 2026-06-26
 
 - Moved the ferry API base URL from a private Swift literal into the checked-in

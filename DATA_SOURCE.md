@@ -22,6 +22,11 @@ response, and use a 10-second request timeout. These client controls avoid a
 local URL-cache response and bound each attempt, but they do not prove that the
 proxy or its upstream data is current.
 
+Schedule parsing accepts a genuine empty array and retains valid rows from a
+mixed payload. An all-malformed schedule response is treated as request failure
+so invalid provider data cannot masquerade as an empty timetable and erase
+same-direction departures that were already displayed.
+
 ## Freshness Boundary
 
 The response shape does not expose a server timestamp, feed version, source
@@ -49,3 +54,5 @@ Do not use this app for operational, safety-critical, or accessibility planning.
   official or real-time feed without verifiable evidence.
 - Add fixture or policy coverage before changing how stale, failed, or
   direction-mismatched responses are published.
+- Preserve the empty, mixed, and all-malformed schedule response distinctions
+  in the executable schedule policy harness.

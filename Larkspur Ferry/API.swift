@@ -64,6 +64,14 @@ final class API {
                 boats.append(ferryBoat)
             }
 
+            guard acceptsParsedFerrySchedule(
+                originalRowCount: result.count,
+                parsedRowCount: boats.count
+                ) else {
+                completion(nil)
+                return
+            }
+
             completion(boats)
         }
     }
