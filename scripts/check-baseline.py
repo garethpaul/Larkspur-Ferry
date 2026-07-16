@@ -25,10 +25,15 @@ SWIFTC ?= swiftc
 
 lint test build: check
 
+# The three policy suites are &&-chained, not `;`-chained. Make runs recipes via `sh -c`
+# with no `set -e`, so a `;`-separated list inside this if-block exits with the status of
+# only its LAST command: a failure in the api-base-url or schedule suite was discarded and
+# the target still succeeded. Verified in isolation -- a recipe of the identical shape whose
+# first two commands exit 1 and whose last exits 0 gives `make` exit 0.
 check:
 \t@if command -v "$(SWIFTC)" >/dev/null 2>&1; then \\
-\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-api-base-url-policy-tests.sh"; \\
-\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-schedule-response-policy-tests.sh"; \\
+\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-api-base-url-policy-tests.sh" && \\
+\t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-schedule-response-policy-tests.sh" && \\
 \t\tSWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-location-response-policy-tests.sh"; \\
 \telse \\
 \t\techo "swiftc unavailable; executable response policy tests skipped"; \\
