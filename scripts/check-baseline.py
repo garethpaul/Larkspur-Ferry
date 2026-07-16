@@ -246,8 +246,80 @@ def read(relative_path):
     return (ROOT / relative_path).read_text(encoding="utf-8", errors="replace")
 
 
-def strip_swift_line_comments(text):
-    return "\n".join(line.split("//", 1)[0] for line in text.splitlines())
+# Ported verbatim from ios-app-share's check-baseline.py, the working reference in
+# this account: a real scanner handling nested /* */ blocks, string-aware and
+# escape-aware.
+#
+# strip_swift_line_comments split each line on "//" and nothing else -- it missed
+# /* */ entirely, and would truncate a string containing a URL. It was also applied
+# at only 3 call sites, none of them the contract checks, so every source assertion
+# below read raw text. A block-commented guard therefore satisfied its own
+# assertion while the code was dead.
+#
+# Verified: block-commenting the acceptsParsedFerrySchedule guard in API.swift left
+# `make check` at exit 0 with all three asserted literals byte-identical inside the
+# comment, while deleting the same guard IS caught ("schedule parsing must reject
+# all-malformed nonempty arrays before reporting success"). The gate was live but
+# blind. API.swift matters most here: the swiftc runners compile only
+# ScheduleResponsePolicy, LocationResponsePolicy and APIBaseURLPolicy, so API.swift
+# has no executable backstop at all.
+def strip_swift_comments(text):
+    result = []
+    index = 0
+    block_depth = 0
+    in_string = False
+    escaped = False
+
+    while index < len(text):
+        character = text[index]
+        next_character = text[index + 1] if index + 1 < len(text) else ""
+
+        if block_depth:
+            if character == "/" and next_character == "*":
+                block_depth += 1
+                index += 2
+                continue
+            if character == "*" and next_character == "/":
+                block_depth -= 1
+                index += 2
+                continue
+            if character == "\n":
+                result.append(character)
+            index += 1
+            continue
+
+        if in_string:
+            result.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            index += 1
+            continue
+
+        if character == '"':
+            in_string = True
+            result.append(character)
+            index += 1
+            continue
+        if character == "/" and next_character == "/":
+            newline = text.find("\n", index + 2)
+            if newline == -1:
+                break
+            result.append("\n")
+            index = newline + 1
+            continue
+        if character == "/" and next_character == "*":
+            block_depth = 1
+            index += 2
+            continue
+
+        result.append(character)
+        index += 1
+
+    return "".join(result)
 
 
 def parse_xml(relative_path, failures):
@@ -451,21 +523,21 @@ def main():
     test_plist = parse_plist("Larkspur FerryUITests/Info.plist", failures)
     project = read("Larkspur Ferry.xcodeproj/project.pbxproj")
     build_script = read("build.sh")
-    api = read("Larkspur Ferry/API.swift")
-    api_base_url_policy = read("Larkspur Ferry/APIBaseURLPolicy.swift")
-    extensions = read("Larkspur Ferry/Extensions.swift")
-    schedule_response_policy = read("Larkspur Ferry/ScheduleResponsePolicy.swift")
-    schedule_response_tests = read("Tests/ScheduleResponsePolicyTests/main.swift")
-    location_response_policy = read("Larkspur Ferry/LocationResponsePolicy.swift")
-    view_controller = read("Larkspur Ferry/ViewController.swift")
-    location_response_tests = read("Tests/LocationResponsePolicyTests/main.swift")
-    api_base_url_tests = read("Tests/APIBaseURLPolicyTests/main.swift")
+    api = strip_swift_comments(read("Larkspur Ferry/API.swift"))
+    api_base_url_policy = strip_swift_comments(read("Larkspur Ferry/APIBaseURLPolicy.swift"))
+    extensions = strip_swift_comments(read("Larkspur Ferry/Extensions.swift"))
+    schedule_response_policy = strip_swift_comments(read("Larkspur Ferry/ScheduleResponsePolicy.swift"))
+    schedule_response_tests = strip_swift_comments(read("Tests/ScheduleResponsePolicyTests/main.swift"))
+    location_response_policy = strip_swift_comments(read("Larkspur Ferry/LocationResponsePolicy.swift"))
+    view_controller = strip_swift_comments(read("Larkspur Ferry/ViewController.swift"))
+    location_response_tests = strip_swift_comments(read("Tests/LocationResponsePolicyTests/main.swift"))
+    api_base_url_tests = strip_swift_comments(read("Tests/APIBaseURLPolicyTests/main.swift"))
     schedule_response_runner = read("scripts/run-schedule-response-policy-tests.sh")
     location_response_runner = read("scripts/run-location-response-policy-tests.sh")
     api_base_url_runner = read("scripts/run-api-base-url-policy-tests.sh")
-    map_controller = read("Larkspur Ferry/MapViewController.swift")
-    pin_annotation = read("Larkspur Ferry/PinAnnotation.swift")
-    app_swift = "\n".join(strip_swift_line_comments(path.read_text(encoding="utf-8", errors="replace"))
+    map_controller = strip_swift_comments(read("Larkspur Ferry/MapViewController.swift"))
+    pin_annotation = strip_swift_comments(read("Larkspur Ferry/PinAnnotation.swift"))
+    app_swift = "\n".join(strip_swift_comments(path.read_text(encoding="utf-8", errors="replace"))
                           for path in sorted((ROOT / "Larkspur Ferry").glob("*.swift")))
     readme = read("README.md")
     vision = read("VISION.md")
@@ -632,7 +704,7 @@ def main():
             api.find(".validate(statusCode: 200..<300)") < api.find(".responseJSON"),
             "API responses must validate successful status and JSON content before parsing",
             failures)
-    require("print(" not in strip_swift_line_comments(api),
+    require("print(" not in api,
             "API source must not print network failures",
             failures)
     require("guard let keyString" in extensions and "String(describing: value)" in extensions,
@@ -782,7 +854,15 @@ def main():
             "location handling must reset lookup state, ignore repeated updates, and use a shared schedule fallback",
             failures)
     tap_start = view_controller.find("func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)")
-    tap_end = view_controller.find("// UITableView", tap_start)
+    # Bound the tap body with the next declaration rather than the "// UITableView"
+    # section comment that used to delimit it. Comments are stripped before these
+    # assertions now, so a comment delimiter resolves to -1 and fails the clean
+    # tree. Anchoring on real code is also what the surrounding checks already do
+    # (location_lookup_end uses "func loadScheduleWithoutLocation()").
+    tap_end = view_controller.find(
+        "func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int)",
+        tap_start,
+    )
     tap_body = view_controller[tap_start:tap_end]
     tap_revision = tap_body.find("directionRevision += 1")
     tap_direction = tap_body.find('if self.f == "Larkspur"')
@@ -820,7 +900,7 @@ def main():
             mark_complete_index < stop_updates_index < last_location_index < fallback_index,
             "empty location updates must stop CoreLocation before schedule fallback",
             failures)
-    require("print(" not in strip_swift_line_comments(view_controller),
+    require("print(" not in view_controller,
             "app location flow must not print debug output",
             failures)
     require("guard let location = location" in map_controller and "as? CustomPointAnnotation" in map_controller,
