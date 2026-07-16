@@ -157,7 +157,15 @@ def check_schedule_publication_contract(api, view_controller, schedule_response_
     # an all-malformed schedule reports success again. API.swift has no executable backstop
     # (the swiftc runners compile only the three *Policy.swift files), so this static check
     # is its only coverage. Contiguous-literal form as used by EXPECTED_MAKEFILE above.
+    #
+    # The pin must be ANCHORED to the statement it follows. A pin covering only the guard is
+    # still defeated by wrapping it: `if false {` + the guard verbatim + `}` keeps the pinned
+    # literal byte-for-byte intact while the guard never runs. Anchoring to the parse loop's
+    # closing brace means any wrapper inserted before the guard breaks the literal.
     schedule_guard = (
+        "                boats.append(ferryBoat)\n"
+        "            }\n"
+        "\n"
         "            guard acceptsParsedFerrySchedule(\n"
         "                originalRowCount: result.count,\n"
         "                parsedRowCount: boats.count\n"
