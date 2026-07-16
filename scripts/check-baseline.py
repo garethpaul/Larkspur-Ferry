@@ -151,10 +151,23 @@ def check_schedule_publication_contract(api, view_controller, schedule_response_
             "return originalRowCount == 0 || parsedRowCount > 0" in schedule_response_policy,
             "schedule payload policy must accept empty or partially valid arrays and reject all-malformed arrays",
             failures)
-    require("guard acceptsParsedFerrySchedule(" in api and
-            "originalRowCount: result.count" in api and
-            "parsedRowCount: boats.count" in api and
-            api.find("guard acceptsParsedFerrySchedule(") < api.find("completion(boats)"),
+    # Pin the whole guard construct, not its fragments. Fragment presence plus an ordering
+    # index cannot distinguish a live guard from a dead one: appending `|| true` to the
+    # condition keeps every asserted literal byte-identical and the ordering intact while
+    # an all-malformed schedule reports success again. API.swift has no executable backstop
+    # (the swiftc runners compile only the three *Policy.swift files), so this static check
+    # is its only coverage. Contiguous-literal form as used by EXPECTED_MAKEFILE above.
+    schedule_guard = (
+        "            guard acceptsParsedFerrySchedule(\n"
+        "                originalRowCount: result.count,\n"
+        "                parsedRowCount: boats.count\n"
+        "                ) else {\n"
+        "                completion(nil)\n"
+        "                return\n"
+        "            }\n"
+    )
+    require(schedule_guard in api and
+            api.find(schedule_guard) < api.find("completion(boats)"),
             "schedule parsing must reject all-malformed nonempty arrays before reporting success",
             failures)
     require("let acceptsResponse = acceptsFerryScheduleResponse(" in view_controller and
